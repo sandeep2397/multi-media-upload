@@ -34,10 +34,19 @@ let routes = [
   },
 
   {
-    path: '/',
+    path: '/home',
     label: 'home',
+    id: 'home',
+    component: ImageUpload,
+    isAllowed: true,
+    route: Route,
+  },
+
+  {
+    path: '/',
+    label: 'default',
     id: 'default',
-    component: () => <Navigate to='/home' />,
+    component: () => <Navigate to='/imageupload' />,
     isAllowed: true,
     route: Route,
   },
