@@ -11,3 +11,24 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.card-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Three columns with equal width */
+  gap: 20px; /* Gap between grid items */
+  padding: 20px;
+}
+ /* Responsive layout for smaller screens */
+ @media (max-width: 768px) {
+  .card-container {
+    grid-template-columns: 1fr; /* Single column layout for smaller screens */
+  }
+}
+
+.card-item {
+  background-color: #fff;
+  color: #fff;
+  padding: 0px;
+  border-radius: 8px;
+  text-align: center;
+}
