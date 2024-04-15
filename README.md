@@ -1,4 +1,4 @@
-# Create React App
+# Multimedia Upload App
 
 This directory is a brief example of a [Multimedia App](https://github.com/facebook/create-react-app) site that can be deployed to Vercel with zero configuration.
 
