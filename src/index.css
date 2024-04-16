@@ -14,7 +14,7 @@ code {
 
 .card-container {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* Three columns with equal width */
+  grid-template-columns: repeat(3, 1fr); /* Three columns with equal width */
   gap: 20px; /* Gap between grid items */
   padding: 20px;
 }
@@ -31,4 +31,23 @@ code {
   padding: 0px;
   border-radius: 8px;
   text-align: center;
+}
+
+.card-item {
+  /* background-color: #fff;
+  color: #fff; */
+  padding: 0px;
+  text-align: left;
+}
+
+.star {
+  font-size: 39px; /* Adjust the size of the stars */
+  color: #ccc; /* Default color of empty stars */
+  cursor: pointer;
+}
+
+.star-filled {
+  font-size: 39px;
+  cursor: pointer;
+  color: #f8d204; /* Color of filled stars */
 }
