@@ -1,17 +1,28 @@
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
+import { useEffect, useState } from 'react';
 
 export default function CountrySelect(props: any) {
+  const [dropdownVal, setDropDownVal] = useState<any>(null);
+  useEffect(() => {
+    if (props?.defaultValue?.label) {
+      const desiredCountry = countries?.find(
+        (info: any) => info.label === props?.defaultValue?.label
+      );
+      setDropDownVal(desiredCountry);
+    }
+  }, [props]);
   return (
     <Autocomplete
       id='country-select-demo'
       //   sx={{ width: 300 }}
       options={countries}
       autoHighlight
-      defaultValue={
-        props?.defaultValue ?? { code: 'IN', label: 'India', phone: '91' }
-      }
+      // defaultValue={
+      //   props?.defaultValue ?? { code: 'IN', label: 'India', phone: '91' }
+      // }
+      value={dropdownVal}
       getOptionLabel={(option) => {
         // props?.sendLocationBack(option.label);
         return option.label;
@@ -34,6 +45,7 @@ export default function CountrySelect(props: any) {
       )}
       onChange={(e: any, data: any) => {
         // let val = e?.target;
+        setDropDownVal(data);
         props?.sendLocationBack(data);
       }}
       renderInput={(params) => (
@@ -41,6 +53,7 @@ export default function CountrySelect(props: any) {
           {...params}
           label='Origin'
           variant='standard'
+          value={dropdownVal}
           inputProps={{
             ...params.inputProps,
 

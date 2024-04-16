@@ -117,7 +117,13 @@ const Login: FC<Props> = (props) => {
           style={{ margin: '160px', zIndex: 5 }}
         />
       )}
-      <Card sx={{ maxWidth: 345, opacity: loginLoading ? 0.3 : 1 }}>
+      <Card
+        sx={{
+          maxWidth: 345,
+          opacity: loginLoading ? 0.3 : 1,
+          pointerEvents: loginLoading ? 'none' : 'auto',
+        }}
+      >
         <LoginLayoutWrapper>
           <Container
             fixed
