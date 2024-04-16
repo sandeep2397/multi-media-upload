@@ -1,6 +1,7 @@
 import {
   Alert,
   Card,
+  CircularProgress,
   Container,
   FormControl,
   IconButton,
@@ -12,11 +13,11 @@ import {
 } from '@mui/material';
 import React, { FC, useEffect, useState } from 'react';
 import { Cookies } from 'react-cookie';
-import { FaEye, FaEyeSlash, FaLock, FaPersonBooth } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
 import { MdLogin } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { toggleSessionPrompt } from './redux/root_actions';
+import { captureLoggedInUser, toggleSessionPrompt } from './redux/root_actions';
 import {
   LoginButton,
   LoginDiv,
@@ -26,9 +27,9 @@ import {
   WelcomeLabel,
 } from './style';
 
-import { isEmpty } from 'lodash';
-import { userData } from './stubbedData';
-
+// import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { customAuth } from './firebaseConfig';
 interface Props {
   children?: null;
 }
@@ -40,6 +41,7 @@ const Login: FC<Props> = (props) => {
 
   const [showPassword, setShowPassword] = React.useState(false);
   const [pcapsState, passscapsState] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
   const [invalidCreds, setInvalidCreds] = useState(false);
   // const [invalidCreds, setInvalidCreds] = useState(false);
 
@@ -79,38 +81,43 @@ const Login: FC<Props> = (props) => {
     });
   };
 
-  const onFormSubmit = (event: any): void => {
+  const onFormSubmit = async (event: any) => {
     event.preventDefault();
     const cookies = new Cookies();
-
-    const userDataExists: any = userData?.find((data) => {
-      if (
-        data?.userName === state.username &&
-        data?.password === state.password
-      ) {
-        return data;
-      }
-    });
-
-    if (userDataExists && !isEmpty(userDataExists)) {
-      let cookieData =
-        {
-          // username: userDataExists.username,
-          jwtToken: userDataExists?.token?.jwt,
-        } || {};
+    setLoginLoading(true);
+    try {
+      // const auth = getAuth();
+      // await firebase.auth().signInWithEmailAndPassword(state.username, state.password);
+      const loginResp: any = await signInWithEmailAndPassword(
+        customAuth,
+        state.username,
+        state.password
+      );
+      let cookieData = {
+        jwtToken: loginResp?.user?.accessToken,
+      };
       let tempdata = JSON.stringify(cookieData);
       cookies.set('multimedia', tempdata, {
         path: '/',
       });
       navigate('/imageupload');
-    } else {
+      setLoginLoading(false);
+      dispatch(captureLoggedInUser(loginResp));
+    } catch (error) {
+      setLoginLoading(false);
       setInvalidCreds(true);
     }
   };
 
   return (
     <>
-      <Card sx={{ maxWidth: 345 }}>
+      {loginLoading && (
+        <CircularProgress
+          color='primary'
+          style={{ margin: '160px', zIndex: 5 }}
+        />
+      )}
+      <Card sx={{ maxWidth: 345, opacity: loginLoading ? 0.3 : 1 }}>
         <LoginLayoutWrapper>
           <Container
             fixed
@@ -132,7 +139,7 @@ const Login: FC<Props> = (props) => {
                 borderTop: 'solid 1px #a7a7a7',
               }}
             >
-              <LoginLabel>{'Login To Product Adoption Tool (PAT)'} </LoginLabel>{' '}
+              <LoginLabel>{'Login To Multi Media App'} </LoginLabel>{' '}
             </div>
             {invalidCreds && (
               <Alert style={{ marginTop: '8px' }} severity='error'>
@@ -174,7 +181,7 @@ const Login: FC<Props> = (props) => {
                     onChange={(event: any) => handleChange(event)}
                     startAdornment={
                       <InputAdornment position='start'>
-                        <FaPersonBooth color='primary' />
+                        <FaUser color='primary' />
                       </InputAdornment>
                     }
                     placeholder='Enter user name'
@@ -233,7 +240,13 @@ const Login: FC<Props> = (props) => {
                     onClick={() => {}}
                     variant='contained'
                     type='submit'
-                    startIcon={<MdLogin />}
+                    startIcon={
+                      !loginLoading ? (
+                        <CircularProgress size={'sm'} color='secondary' />
+                      ) : (
+                        <MdLogin />
+                      )
+                    }
                     // disabled={state?.username === '' || state?.password === ''}
                   >
                     <WelcomeLabel color={theme?.palette?.primary?.contrastText}>

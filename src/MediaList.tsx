@@ -1,5 +1,6 @@
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   CardHeader,
@@ -14,7 +15,7 @@ import {
 } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useCallback, useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
 import { useDispatch, useSelector } from 'react-redux';
 // import VideoThumbnailGenerator from 'video-thumbnail-generator';
@@ -30,10 +31,16 @@ import './firebaseConfig';
 import { mediaDb } from './firebaseConfig';
 import { setCachedMediaList } from './redux/root_actions';
 // import LongMenu from '../../menu/MenuList';
-import { FaUpload } from 'react-icons/fa';
+import InputBase from '@mui/material/InputBase';
+import Paper from '@mui/material/Paper';
+import { deepPurple, teal } from '@mui/material/colors';
+import { FaSearch, FaUpload } from 'react-icons/fa';
 import { MdPermMedia } from 'react-icons/md';
+import { MediaDefCols, MediaListPath } from './Media';
 import CustomDropzone from './components/Dropzone/CustomDropzone';
 import LongMenu from './components/menu/MenuList';
+import { convertToBrowserTimeZone } from './utils/customUtils';
+import useDebounce from './utils/debounceHook';
 
 interface Props {}
 
@@ -52,12 +59,14 @@ const MediaList: FC<Props> = (props: Props) => {
 
   const dispatch = useDispatch();
 
-  const [mediaMetaData, setMediaMetaData]: any = useState(null);
+  const [bindMediaData, setBindMediaData]: any = useState([]);
   const [uploadedToServer, setMediaUploadToServer]: any = useState(undefined);
   const [thumbnailUrl, setThumbnailUrl] = useState<any>(null);
   const [invalidMedia, setInvalidMedia] = useState(false);
   const [mediaDelete, setMediaDelete] = useState(false);
   const [editMedia, setMediaEdit] = useState(false);
+  const [search, setSearch]: any = useState('');
+  const value = useDebounce(search, 300);
 
   const initState: State = {
     isOpenPopup: false,
@@ -111,6 +120,7 @@ const MediaList: FC<Props> = (props: Props) => {
         }
       });
       dispatch(setCachedMediaList(sortedArr));
+      setBindMediaData(sortedArr);
       setMediaLoading(false);
 
       // setFileDetails(fileDetails);
@@ -144,7 +154,7 @@ const MediaList: FC<Props> = (props: Props) => {
 
   const handleDelete = async (mediaInfo: any) => {
     try {
-      setMediaLoading(true);
+      // setMediaLoading(true);
       const filesList = await listAll(ref(mediaDb, 'mediaFiles'));
 
       const detailsPromises = filesList?.items?.map(async (fileRef: any) => {
@@ -164,6 +174,56 @@ const MediaList: FC<Props> = (props: Props) => {
       console.error('Error deleting file:', error);
     }
   };
+
+  const debounce = (func: any) => {
+    let timer: any;
+    return function (this: any, ...args: any) {
+      const context = this;
+      if (timer) {
+        clearTimeout(timer);
+      }
+      timer = setTimeout(() => {
+        timer = null;
+        func.apply(context, args);
+      }, 300);
+    };
+  };
+
+  const handleFilter = (value: string) => {
+    // props?.handleFilterChange(column, value, searchQuery);
+    // dispatch(saveCurrentKeyValue(props?.keyvalue));
+    const defCols: any = MediaDefCols;
+    const listPath: any = MediaListPath;
+    const filteredList = cachedMediaData?.filter((row: any) => {
+      for (let columnInfo of defCols) {
+        let derivedPath: string = listPath?.[columnInfo]?.id || '';
+        if (derivedPath.indexOf('$.') !== -1) {
+          derivedPath = derivedPath.slice(2);
+        }
+
+        let celldata: any;
+        if (derivedPath?.indexOf('.') > -1) {
+          celldata = derivedPath
+            ?.split('.')
+            .reduce((o: any, i: any) => o?.[i], row);
+        } else {
+          celldata = row?.[derivedPath];
+        }
+        if (
+          columnInfo &&
+          derivedPath &&
+          celldata?.toString()?.toLowerCase()?.search(value?.toLowerCase()) !==
+            -1 &&
+          celldata?.toString()?.toLowerCase()?.search(value?.toLowerCase()) !==
+            undefined
+        ) {
+          return row;
+        }
+      }
+    });
+    setBindMediaData(filteredList);
+  };
+  const optimizedFn = useCallback(debounce(handleFilter), []);
 
   return (
     <>
@@ -189,6 +249,7 @@ const MediaList: FC<Props> = (props: Props) => {
                     height: '25px',
                     marginBottom: '8px',
                     fontSize: '20px',
+                    lineHeight: '2',
                   }}
                   fontWeight={'600'}
                   // variant='h5'
@@ -199,8 +260,49 @@ const MediaList: FC<Props> = (props: Props) => {
                   Media List
                 </Typography>
 
+                <Paper
+                  component='form'
+                  sx={{
+                    p: '2px 4px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: 400,
+                    height: '35px',
+                    border: `solid 1px ${theme?.palette?.primary?.main}`,
+                  }}
+                >
+                  <InputBase
+                    sx={{
+                      ml: 1,
+                      flex: 1,
+                      // borderRadius: `solid 0.5px ${theme?.palette?.primary?.main}`,
+                    }}
+                    name='search'
+                    value={search}
+                    onChange={(e: any) => {
+                      optimizedFn(e.target.value);
+                      // handleFilter(props?.keyvalue, e?.target?.value || '');
+                      setSearch(e.target.value);
+                    }}
+                    placeholder='Search Media'
+                    inputProps={{ 'aria-label': 'search Images maps' }}
+                  />
+                  <IconButton
+                    type='button'
+                    sx={{ p: '10px' }}
+                    aria-label='search'
+                  >
+                    <FaSearch />
+                  </IconButton>
+                  {/* <Divider sx={{ height: 28, m: 0.5 }} orientation='vertical' /> */}
+                </Paper>
                 <div
-                  style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    gap: '8px',
+                    marginTop: '8px',
+                  }}
                 >
                   <Button
                     variant='contained'
@@ -230,7 +332,7 @@ const MediaList: FC<Props> = (props: Props) => {
                       lineHeight: 2.5,
                     }}
                   >
-                    {`Showing ${cachedMediaData?.length} of ${cachedMediaData?.length} records`}
+                    {`Showing ${bindMediaData?.length} of ${cachedMediaData?.length} records`}
                   </Typography>
                 </div>
               </div>
@@ -243,8 +345,8 @@ const MediaList: FC<Props> = (props: Props) => {
               ) : (
                 <>
                   <div className='card-container'>
-                    {Array.isArray(cachedMediaData) &&
-                      cachedMediaData?.map((storedMedia: any) => {
+                    {Array.isArray(bindMediaData) &&
+                      bindMediaData?.map((storedMedia: any) => {
                         let size = storedMedia?.metadata?.size
                           ? (
                               storedMedia?.metadata?.size /
@@ -255,13 +357,23 @@ const MediaList: FC<Props> = (props: Props) => {
                         let storedMdName = storedMedia?.metadata?.name || '';
                         let nameList = storedMdName?.split('.');
                         let onlyName = nameList?.[0] || '';
+                        let userName =
+                          storedMedia?.metadata?.customMetadata?.modifiedBy?.toUpperCase();
                         return (
                           <div className='card-item'>
                             {/* {storedMedia?.metadata?.name} */}
-                            <Card style={{ height: '290px', width: '340px' }}>
+                            <Card style={{ height: '315px', width: '380px' }}>
                               <CardHeader
-                                style={{ padding: '8px' }}
+                                style={{
+                                  padding: '8px 16px',
+                                  color: theme?.palette?.primary?.main,
+                                }}
                                 title={onlyName}
+                                subheader={
+                                  storedMedia?.metadata?.customMetadata
+                                    ?.description || 'No Description Available'
+                                }
+                                color='primary'
                                 action={
                                   <div
                                     style={{
@@ -297,6 +409,7 @@ const MediaList: FC<Props> = (props: Props) => {
                                         setState({
                                           ...state,
                                           isOpenPopup: true,
+                                          popupState: storedMedia,
                                           popupType: 'edit',
                                         });
                                       }}
@@ -312,7 +425,7 @@ const MediaList: FC<Props> = (props: Props) => {
                                   controls
                                   volume={0.5}
                                   width='312px'
-                                  height={'125px'}
+                                  height={'135px'}
                                   playsinline
                                   pip
                                   loop
@@ -324,23 +437,38 @@ const MediaList: FC<Props> = (props: Props) => {
                                 <div
                                   style={{
                                     padding: '8px',
+                                    paddingTop: '0px',
                                     textAlign: 'center',
-                                    height: '115px',
+                                    height: '125px',
                                     width: '150px',
                                   }}
                                 >
                                   {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
                                   <img
                                     src={storedMedia?.downloadUrl}
-                                    height='100%'
+                                    height='125px'
                                     width={'100%'}
                                     alt={`Image${onlyName}`}
+                                    onClick={() => {
+                                      setState({
+                                        ...state,
+                                        isOpenPopup: true,
+                                        popupState: storedMedia,
+                                        popupType: 'edit',
+                                      });
+                                    }}
                                     style={{
                                       padding: '8px',
                                       alignContent: 'center',
+                                      cursor: 'pointer',
                                     }}
                                   />{' '}
                                 </div>
+                                // <CardMedia
+                                //   sx={{ height: 150, width: '80px' }}
+                                //   image={storedMedia?.downloadUrl}
+                                //   title={`Image ${onlyName}`}
+                                // />
                               )}
 
                               <Divider />
@@ -353,21 +481,13 @@ const MediaList: FC<Props> = (props: Props) => {
                                 }}
                               >
                                 <Typography
-                                  fontSize={'14px'}
-                                  color='#434343'
-                                  component='div'
-                                  fontWeight={'500'}
-                                >
-                                  {storedMedia?.metadata?.customMetadata
-                                    ?.description || 'No Description Available'}
-                                </Typography>
-                                <Typography
                                   style={{
                                     textAlign: 'left',
                                     fontSize: '12px',
                                   }}
                                   color='text.secondary'
                                 >{`Size:  ${size} MB`}</Typography>
+
                                 <Typography
                                   style={{
                                     textAlign: 'left',
@@ -379,17 +499,7 @@ const MediaList: FC<Props> = (props: Props) => {
                                     storedMedia?.metadata?.contentType || ''
                                   } `}
                                 </Typography>
-                                <Typography
-                                  style={{
-                                    textAlign: 'left',
-                                    fontSize: '12px',
-                                  }}
-                                  color='text.secondary'
-                                >
-                                  {`Uploaded At :  ${new Date(
-                                    storedMedia?.metadata?.timeCreated
-                                  ).toDateString()} `}
-                                </Typography>
+
                                 <Typography
                                   style={{
                                     textAlign: 'left',
@@ -425,14 +535,68 @@ const MediaList: FC<Props> = (props: Props) => {
                                     {/* </Typography> */}
                                   </Box>
                                 </Typography>
+                                <Typography
+                                  style={{
+                                    textAlign: 'left',
+                                    fontSize: '12px',
+                                  }}
+                                  color='text.secondary'
+                                >
+                                  {`Modified At :  ${convertToBrowserTimeZone(
+                                    storedMedia?.metadata?.timeCreated
+                                  )} `}
+                                </Typography>
+
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    gap: '4px',
+                                  }}
+                                >
+                                  <Typography
+                                    style={{
+                                      textAlign: 'left',
+                                      fontSize: '12px',
+                                    }}
+                                    fontWeight={'400'}
+                                    color='text.primary'
+                                  >
+                                    {` Last Modified By : `}
+                                  </Typography>
+                                  <Avatar
+                                    alt={userName}
+                                    sx={{
+                                      bgcolor: userName
+                                        ?.toLowerCase()
+                                        ?.includes('sandeep'.toLowerCase())
+                                        ? deepPurple[500]
+                                        : teal[500],
+                                      width: 22,
+                                      height: 22,
+                                      fontSize: '12px',
+                                    }}
+                                    src='/static/images/avatar/2.jpg'
+                                  />
+                                  <Typography
+                                    style={{
+                                      textAlign: 'left',
+                                      fontSize: '12px',
+                                    }}
+                                    fontWeight={'400'}
+                                    color='text.primary'
+                                  >
+                                    {` ${storedMedia?.metadata?.customMetadata?.modifiedBy} `}
+                                  </Typography>
+                                </div>
                               </CardContent>
                             </Card>
                           </div>
                         );
                       })}
                   </div>
-                  {Array.isArray(cachedMediaData) &&
-                    cachedMediaData?.length === 0 && (
+                  {Array.isArray(bindMediaData) &&
+                    bindMediaData?.length === 0 && (
                       <div
                         style={{
                           textAlign: 'center',
@@ -494,11 +658,33 @@ const MediaList: FC<Props> = (props: Props) => {
           </Snackbar>
         )}
 
+        {editMedia && (
+          <Snackbar
+            open={editMedia}
+            autoHideDuration={6000}
+            onClose={handleClose}
+            anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+          >
+            <Alert
+              onClose={handleClose}
+              severity='success'
+              variant='filled'
+              sx={{ width: '100%' }}
+            >
+              {`Media File succesfully modified !!`}
+            </Alert>
+          </Snackbar>
+        )}
+
         {state?.isOpenPopup && (
           <CustomDropzone
             mode={state?.popupType}
-            handleClose={(success: boolean) => {
-              if (success) {
+            rowData={state?.popupState}
+            handlePopupClose={(success: boolean, mode: string) => {
+              if (mode === 'edit') {
+                fetchAllMediaApi();
+                setMediaEdit(true);
+              } else if (success) {
                 fetchAllMediaApi();
                 setMediaUploadToServer(true);
               }

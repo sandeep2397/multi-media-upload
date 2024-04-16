@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface Props {
   defaultValue: any;
@@ -6,7 +6,11 @@ interface Props {
 }
 
 const StarRating = ({ defaultValue, onChange }: Props) => {
-  const [rating, setRating] = useState(defaultValue || 1);
+  const [rating, setRating] = useState(defaultValue ?? 1);
+
+  useEffect(() => {
+    setRating(defaultValue);
+  }, [defaultValue]);
 
   const handleClick = (value: any) => {
     setRating(value);

@@ -13,6 +13,7 @@ import {
   SET_STEPPER_STATE,
   TOGGLE_SESSION_PROMPT,
   TOGGLE_SNACKBAR,
+  TOGGLE_USER_SUCCESS,
 } from '../../constants/actionTypes';
 
 interface Snackbar {
@@ -80,6 +81,8 @@ const Common = (state: State = INIT_STATE, action: CommonAction) => {
       return { ...state, loggedInData: action.payload };
     case CACHE_MEDIA_DATA:
       return { ...state, cachedMediaData: action.payload };
+    case TOGGLE_USER_SUCCESS:
+      return { ...state, loggedInData: action.payload };
     default:
       return { ...state };
   }

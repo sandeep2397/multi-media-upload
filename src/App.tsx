@@ -9,13 +9,10 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
-import './App.css';
 import { PrivateRoute } from './PrivateRoute';
 import { routes } from './routes';
 import Topbar from './Topbar';
 import { isUserAuthenticated } from './utils/auth';
-import { useMatchedRoute } from './utils/hooks';
-
 interface Props {
   theme?: any;
   Authentication?: any;
@@ -28,7 +25,6 @@ const App: FC<Props> = (props: Props) => {
   const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
-  const macthedRoute: any = useMatchedRoute();
   // const match = useMatch();
   const params: any = useParams();
   const [pressed, setPressed] = useState(false);
@@ -92,9 +88,9 @@ const App: FC<Props> = (props: Props) => {
         {/* <Route path={process.env.PUBLIC_URL}> */}
         {routes.map(({ path, name, exact, ...route }: any, key: any) => {
           let filtercrumbs = routes.filter(({ path }) => {
-            if (macthedRoute?.path?.indexOf(path) !== -1) {
-              return true;
-            }
+            // if (macthedRoute?.path?.indexOf(path) !== -1) {
+            return true;
+            // }
           });
           let crumbs = filtercrumbs.map(({ path, ...rest }) => {
             return {

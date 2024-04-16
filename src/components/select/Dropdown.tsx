@@ -9,7 +9,9 @@ export default function CountrySelect(props: any) {
       //   sx={{ width: 300 }}
       options={countries}
       autoHighlight
-      defaultValue={{ code: 'IN', label: 'India', phone: '91' }}
+      defaultValue={
+        props?.defaultValue ?? { code: 'IN', label: 'India', phone: '91' }
+      }
       getOptionLabel={(option) => {
         // props?.sendLocationBack(option.label);
         return option.label;

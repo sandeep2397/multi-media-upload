@@ -23,22 +23,35 @@ import { v4 } from 'uuid';
 import { DialogActions } from '@mui/material';
 import 'firebase/storage';
 import {
+  getDownloadURL,
   getMetadata,
+  listAll,
   ref,
   updateMetadata,
   uploadBytes,
 } from 'firebase/storage';
-import { FaUpload } from 'react-icons/fa';
+import { FaEdit, FaUpload } from 'react-icons/fa';
 import { MdCloudUpload, MdOutlineCancel } from 'react-icons/md';
 import '../../firebaseConfig';
 import { mediaDb } from '../../firebaseConfig';
 import CustomDialog from '../Dialog/CustomDialog';
 import CountrySelect from '../select/Dropdown';
 import StarRating from '../star-rating/StarRating';
+// import firebase from '../../newfirebaseConfig';
+import firebase, { FirebaseApp } from 'firebase/app';
+import { FirebaseStorage } from 'firebase/storage';
+import { useGetUserId } from '../../utils/customHooks';
+
+declare module 'firebase/app' {
+  interface FirebaseApp {
+    storage?: () => FirebaseStorage;
+  }
+}
 
 interface Props {
-  handleClose: (isConfirm?: any) => void;
+  handlePopupClose: (isConfirm?: any, mode?: any) => void;
   mode: string;
+  rowData?: any;
 }
 
 interface State {
@@ -51,13 +64,16 @@ interface State {
 
 function CustomDropzone(props: Props) {
   const theme: any = useTheme();
+  const userId = useGetUserId();
+
   const [invalidFileType, setInvalidMediaType] = useState(false);
+
   const [loading, setLoading]: any = useState(false);
   const cachedMediaData =
     useSelector((state: any) => state.Common.cachedMediaData) || [];
 
   const dispatch = useDispatch();
-
+  const { mode, rowData } = props;
   const [mediaMetaData, setMediaMetaData]: any = useState(null);
   const [uploadedToServer, setMediaUploadToServer]: any = useState(undefined);
   const [thumbnailUrl, setThumbnailUrl] = useState<any>(null);
@@ -105,7 +121,7 @@ function CustomDropzone(props: Props) {
 
   const [rating, setRating] = useState(1);
 
-  const handleClose = (
+  const handlePopupClose = (
     event?: React.SyntheticEvent | Event,
     reason?: string
   ) => {
@@ -121,7 +137,7 @@ function CustomDropzone(props: Props) {
   };
 
   useEffect(() => {
-    if (acceptedFiles && acceptedFiles?.length > 0) {
+    if (acceptedFiles && acceptedFiles?.length > 0 && mode !== 'edit') {
       let uploadedFiles: any = acceptedFiles || [];
       // setFiles(uploadedFiles);
 
@@ -170,20 +186,6 @@ function CustomDropzone(props: Props) {
             }
           };
         }
-        // image.onload = function () {
-        //   var height = image?.height || 0;
-        //   var width = image?.width || 0;
-        //   let imageDimension = height * width;
-        //   let createImageUrl = URL.createObjectURL(mediaInfo);
-        //   setMediaUrl(createImageUrl);
-        //   setInvalidMedia(false);
-        //   setState({
-        //     ...state,
-        //     ImageId: mediaName,
-        //     Author: mediaName,
-        //     imageDimension,
-        //   });
-        // };
       } else {
         setInvalidMedia(true);
         setMediaUrl('');
@@ -196,9 +198,32 @@ function CustomDropzone(props: Props) {
     }
   }, [acceptedFiles]);
 
-  // useEffect(() => {
-  //   dispatch(setCachedMediaList([]));
-  // }, []);
+  useEffect(() => {
+    if (mode === 'edit') {
+      setMediaUrl(rowData?.downloadUrl);
+      setMediaMetaData({
+        path:
+          rowData?.metadata?.customMetadata?.mediaName ||
+          rowData?.metadata?.name,
+        lastModified: new Date(),
+        type: rowData?.metadata?.contentType,
+        size: rowData?.metadata?.size,
+        name: rowData?.metadata?.name,
+        webkitRelativePath: '',
+      });
+      setInvalidMedia(false);
+      setState({
+        ...state,
+        Description: rowData?.metadata?.customMetadata?.description || '',
+        Location: {
+          code: rowData?.metadata?.customMetadata?.locationCode,
+          label: rowData?.metadata?.customMetadata?.locationName,
+          phone: '91',
+        },
+      });
+      setRating(+rowData?.metadata?.customMetadata?.rating);
+    }
+  }, []);
 
   // useEffect(() => {
   //   const handleBeforeUnload = (event: any) => {
@@ -220,35 +245,78 @@ function CustomDropzone(props: Props) {
     // } else {
     //   mediaRef = ref(mediaDb, `videos/${mediaMetaData?.name + '_' + v4()}`);
     // }
-
-    mediaRef = ref(mediaDb, `mediaFiles/${mediaMetaData?.name + '_' + v4()}`);
-    try {
-      const uploadedFile = await uploadBytes(mediaRef, mediaMetaData);
-      let metadata: any = await getMetadata(mediaRef);
-      metadata = {
-        ...metadata,
-        customMetadata: {
-          description: state?.Description,
-          locationName: state?.Location?.label,
-          locationCode: state?.Location?.code,
-          rating,
-        },
-      };
-      // Object.assign(metadata.customMetadata, {
-      //   description: 'Custom name',
-      // });
+    if (props?.mode === 'edit') {
+      // Edit feature
       try {
-        await updateMetadata(mediaRef, metadata);
+        setMediaLoading(true);
+        const filesList = await listAll(ref(mediaDb, 'mediaFiles'));
+
+        filesList?.items?.forEach(async (fileRef: any) => {
+          const downloadUrl = await getDownloadURL(fileRef);
+          if (downloadUrl === rowData?.downloadUrl) {
+            try {
+              // let metadata: any = await getMetadata(mediaMetaData);
+              let metadata = {
+                ...rowData,
+                customMetadata: {
+                  ...rowData?.customMetadata,
+                  description: state?.Description,
+                  locationName: state?.Location?.label,
+                  locationCode: state?.Location?.code,
+                  mediaName: mediaMetaData?.name,
+                  rating,
+                  createdBy: userId,
+                  modifiedBy: userId,
+                },
+              };
+              try {
+                const modifiedMetaData = await updateMetadata(
+                  fileRef,
+                  metadata
+                );
+                props?.handlePopupClose(true, 'edit');
+              } catch (err) {
+                setInvalidMedia(true);
+              }
+            } catch (err) {
+              setInvalidMedia(true);
+            }
+          }
+        });
+      } catch (error) {
+        setInvalidMedia(true);
+        console.error('Error deleting file:', error);
+      }
+    } else {
+      mediaRef = ref(mediaDb, `mediaFiles/${mediaMetaData?.name + '_' + v4()}`);
+      try {
+        const uploadedFile = await uploadBytes(mediaRef, mediaMetaData);
+        let metadata: any = await getMetadata(mediaRef);
+        metadata = {
+          ...metadata,
+          customMetadata: {
+            description: state?.Description,
+            locationName: state?.Location?.label,
+            locationCode: state?.Location?.code,
+            mediaName: mediaMetaData?.name,
+            modifiedBy: userId,
+          },
+        };
+        setLoading(false);
+        setMediaUploadToServer(true);
+        props.handlePopupClose(true);
+        // Object.assign(metadata.customMetadata, {
+        //   description: 'Custom name',
+        // });
+        try {
+          const modifiedMetaData = await updateMetadata(mediaRef, metadata);
+        } catch (err) {
+          setInvalidMedia(true);
+        }
       } catch (err) {
         setInvalidMedia(true);
       }
-      setLoading(false);
-      setMediaUploadToServer(true);
-      props.handleClose(true);
-    } catch (err) {
-      setInvalidMedia(true);
     }
-
     // uploadBytes(mediaRef, mediaMetaData)
     //   .then(() => {
     //     setLoading(false);
@@ -281,7 +349,7 @@ function CustomDropzone(props: Props) {
     return (
       <DialogActions>
         <Button
-          onClick={() => props.handleClose(false)}
+          onClick={() => props.handlePopupClose(false)}
           variant='outlined'
           startIcon={<MdOutlineCancel />}
         >
@@ -290,7 +358,7 @@ function CustomDropzone(props: Props) {
 
         <Button
           variant='contained'
-          startIcon={<FaUpload></FaUpload>}
+          startIcon={props.mode === 'edit' ? <FaEdit /> : <FaUpload />}
           onClick={() => handleUploadClick()}
           disabled={mediaMetaData === null || invalidFileType}
           style={{
@@ -298,7 +366,7 @@ function CustomDropzone(props: Props) {
             marginRight: '8px',
           }}
         >
-          Upload
+          {props.mode === 'edit' ? 'Modify' : 'Upload'}
         </Button>
       </DialogActions>
     );
@@ -317,48 +385,53 @@ function CustomDropzone(props: Props) {
               gap: '8px',
             }}
           >
-            <div {...getRootProps({ className: 'dropzone' })}>
-              <input className='input-zone' {...getInputProps()} />
+            {props?.mode !== 'edit' && (
+              <div
+                style={{ width: '75%' }}
+                {...getRootProps({ className: 'dropzone' })}
+              >
+                <input className='input-zone' {...getInputProps()} />
 
-              <OutlinedInput
-                id={'outlined'}
-                type={'text'}
-                value={''}
-                color='primary'
-                style={{
-                  height: '65px',
-                  fontSize: '12px',
-                  width: '370px',
-                  border: `solid 1px ${theme?.palette.primary.main}`,
-                }}
-                name='password'
-                onChange={handleFileChange}
-                placeholder={
-                  isDragActive
-                    ? 'Release File'
-                    : `Attach or Drag and drop image/video files here*`
-                }
-                endAdornment={
-                  <Button
-                    onClick={() => {}}
-                    variant='contained'
-                    type='submit'
-                    color={'primary'}
-                    startIcon={<MdAttachFile />}
-                    style={{ fontSize: '11px', height: '28px' }}
-                    // disabled={state?.username === '' || state?.password === ''}
-                  >
-                    <Typography
-                      style={{ fontSize: '12px' }}
-                      color={theme?.palette?.primary?.contrastText}
+                <OutlinedInput
+                  id={'outlined'}
+                  type={'text'}
+                  value={''}
+                  color='primary'
+                  style={{
+                    height: '65px',
+                    fontSize: '12px',
+                    width: '100%',
+                    border: `solid 1px ${theme?.palette.primary.main}`,
+                  }}
+                  name='password'
+                  onChange={handleFileChange}
+                  placeholder={
+                    isDragActive
+                      ? 'Release File'
+                      : `Attach or Drag and drop image/video files here*`
+                  }
+                  endAdornment={
+                    <Button
+                      onClick={() => {}}
+                      variant='contained'
+                      type='submit'
+                      color={'primary'}
+                      startIcon={<MdAttachFile />}
+                      style={{ fontSize: '11px', height: '28px' }}
+                      // disabled={state?.username === '' || state?.password === ''}
                     >
-                      {'Attach'}
-                    </Typography>
-                  </Button>
-                }
-                label='Choose File'
-              />
-            </div>
+                      <Typography
+                        style={{ fontSize: '12px' }}
+                        color={theme?.palette?.primary?.contrastText}
+                      >
+                        {'Attach'}
+                      </Typography>
+                    </Button>
+                  }
+                  label='Choose File'
+                />
+              </div>
+            )}
 
             {/* {loading && <CircularProgress />} */}
 
@@ -398,6 +471,7 @@ function CustomDropzone(props: Props) {
               </div>
               <div className='card-item'>
                 <CountrySelect
+                  defaultValue={state?.Location}
                   sendLocationBack={(selectedOption: any) => {
                     setState({
                       ...state,
@@ -421,7 +495,7 @@ function CustomDropzone(props: Props) {
                 borderRadius: '4px',
                 boxShadow:
                   '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
-                maxHeight: '215px',
+                maxHeight: '300px',
                 // transition
                 maxWidth: '310px!important',
                 display: 'flex',
@@ -437,10 +511,14 @@ function CustomDropzone(props: Props) {
                     controls
                     volume={0.5}
                     width='100%'
-                    height={'215px'}
+                    height={'245px'}
                     playsinline
                     pip
-                    style={{ position: 'relative', bottom: '10px' }}
+                    style={{
+                      position: 'relative',
+                      bottom: '10px',
+                      padding: '4px',
+                    }}
                     loop
                     // muted
                     url={mediaUrl}
@@ -456,7 +534,7 @@ function CustomDropzone(props: Props) {
                       mediaUrl ? mediaUrl : require('../../assets/noImage.png')
                     }
                     height='200px'
-                    width={'250px'}
+                    width={'260px'}
                     alt='Image/video'
                     style={{ padding: '8px' }}
                   />
@@ -489,11 +567,11 @@ function CustomDropzone(props: Props) {
           <Snackbar
             open={invalidFileType}
             autoHideDuration={6000}
-            onClose={handleClose}
+            onClose={handlePopupClose}
             anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
           >
             <Alert
-              onClose={handleClose}
+              onClose={handlePopupClose}
               variant='filled'
               sx={{ width: '100%' }}
               severity='error'
@@ -505,6 +583,7 @@ function CustomDropzone(props: Props) {
       </Box>
     );
   };
+
   return (
     <CustomDialog
       icon={MdCloudUpload}
@@ -519,9 +598,11 @@ function CustomDropzone(props: Props) {
         height: '485px',
       }}
       bodyStyle={{
+        minHeight: '345px',
+        maxHeight: '345px',
         height: 'auto',
       }}
-      handleClose={() => props.handleClose(false)}
+      handleClose={() => props.handlePopupClose(false)}
     />
   );
 }

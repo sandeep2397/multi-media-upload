@@ -144,3 +144,20 @@ export const LoginButton = styled(Button)`
     box-shadow: none;
   }
 `;
+
+export const UserLabel = styled.h6`
+  font-family: ${(props: Props) => props.theme.typography.body1.fontFamily};
+  margin-right: 2px;
+  color: #a7a7a7;
+  font-size: 10px;
+  font-weight: normal;
+  font-stretch: normal;
+  font-style: normal;
+  line-height: 1.36;
+  letter-spacing: normal;
+  text-align: left;
+  width: auto;
+  height: auto;
+  margin: 0;
+  line-height: 1.3;
+`;

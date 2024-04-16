@@ -13,6 +13,7 @@ import {
   SET_STEPPER_STATE,
   TOGGLE_SESSION_PROMPT,
   TOGGLE_SNACKBAR,
+  TOGGLE_USER_SUCCESS,
 } from '../../constants/actionTypes';
 type CommonAction = { type: string; payload: {} | string };
 
@@ -60,5 +61,9 @@ export const commonUserLoginSuccess = (data: any): CommonAction => ({
 
 export const setCachedMediaList = (data: any): CommonAction => ({
   type: CACHE_MEDIA_DATA,
+  payload: data,
+});
+export const captureLoggedInUser = (data: any): CommonAction => ({
+  type: TOGGLE_USER_SUCCESS,
   payload: data,
 });
