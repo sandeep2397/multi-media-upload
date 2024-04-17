@@ -536,15 +536,17 @@ function CustomDropzone(props: Props) {
                     <ReactPlayer
                       playing
                       controls
-                      volume={0.5}
+                      volume={0}
                       width='100%'
                       height={'245px'}
                       playsinline
                       pip
+                      muted
                       style={{
                         position: 'relative',
                         bottom: '10px',
                         padding: '4px',
+                        minWidth: '200px',
                       }}
                       loop
                       // muted

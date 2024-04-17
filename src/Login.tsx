@@ -51,6 +51,7 @@ const Login: FC<Props> = (props) => {
   const [pcapsState, passscapsState] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [invalidCreds, setInvalidCreds] = useState(false);
+  const [popupBlocked, setPopupBlocked] = useState(false);
   // const [invalidCreds, setInvalidCreds] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -146,7 +147,12 @@ const Login: FC<Props> = (props) => {
       const credential = GoogleAuthProvider.credentialFromError(error);
       console.error('Sign In err===>', credential);
       setLoginLoading(false);
-      setInvalidCreds(true);
+
+      if (error.code === 'auth/popup-blocked') {
+        setPopupBlocked(true);
+      } else {
+        setInvalidCreds(true);
+      }
     }
   };
 
@@ -191,7 +197,14 @@ const Login: FC<Props> = (props) => {
             {invalidCreds && (
               <Alert style={{ marginTop: '8px' }} severity='error'>
                 {' '}
-                {'Invalid Credentials'}
+                {'Invalid Credentials or'}
+              </Alert>
+            )}
+
+            {popupBlocked && (
+              <Alert style={{ marginTop: '8px' }} severity='info'>
+                {' '}
+                {'Enable popup blocker from your url'}
               </Alert>
             )}
 

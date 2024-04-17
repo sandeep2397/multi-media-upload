@@ -423,12 +423,13 @@ const MediaList: FC<Props> = (props: Props) => {
                                 <ReactPlayer
                                   playing
                                   controls
-                                  volume={0.5}
+                                  volume={0}
                                   width='312px'
                                   height={'135px'}
                                   playsinline
                                   pip
                                   loop
+                                  muted={true}
                                   url={storedMedia?.downloadUrl}
                                   light={thumbnailUrl}
                                 />
