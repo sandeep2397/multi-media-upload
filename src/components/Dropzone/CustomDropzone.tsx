@@ -535,11 +535,11 @@ function CustomDropzone(props: Props) {
                   maxWidth: '320px!important',
                   display: 'flex',
                   flexDirection: 'row',
-                  gap: '8px',
+                  gap: '2px',
                   // justifyContent: 'space-between',
                 }}
               >
-                <div style={{ flex: '0 0 65%', maxWidth: '65%' }}>
+                <div style={{ flex: '0 0 60%', maxWidth: '60%' }}>
                   {' '}
                   {mediaMetaData?.type.includes('video') ? (
                     <div>
@@ -547,8 +547,8 @@ function CustomDropzone(props: Props) {
                         playing
                         controls
                         volume={0}
-                        width={'310px'}
-                        height={'215px'}
+                        height='200px'
+                        width={'260px'}
                         playsinline
                         pip
                         muted
@@ -582,7 +582,13 @@ function CustomDropzone(props: Props) {
                     />
                   )}
                 </div>
-                <div style={{ flex: '0 0 35%', maxWidth: '35%' }}>
+                <div
+                  style={{
+                    flex: '0 0 40%',
+                    maxWidth: '40%',
+                    padding: '0px 8px',
+                  }}
+                >
                   {/* <CardContent
                     style={{ display: 'flex', flexDirection: 'column' }}
                   > */}

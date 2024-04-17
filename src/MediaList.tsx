@@ -379,7 +379,7 @@ const MediaList: FC<Props> = (props: Props) => {
                         }
 
                         if (
-                          storedMdName === deleteSingleMedia?.metadata?.name &&
+                          storedMdName === editSingleMedia?.metadata?.name &&
                           editSingleMedia?.shouldEdit
                         ) {
                           blurMedia = true;
@@ -512,15 +512,14 @@ const MediaList: FC<Props> = (props: Props) => {
                                       padding: '8px',
                                       paddingTop: '0px',
                                       textAlign: 'center',
-                                      height: '125px',
-                                      width: '150px',
+                                      height: '155px',
+                                      width: '300px',
+                                      // width: 'auto',
                                     }}
                                   >
                                     {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
                                     <img
                                       src={storedMedia?.downloadUrl}
-                                      height='125px'
-                                      width={'100%'}
                                       alt={`Image${onlyName}`}
                                       onClick={() => {
                                         setState({
@@ -534,6 +533,10 @@ const MediaList: FC<Props> = (props: Props) => {
                                         padding: '8px',
                                         alignContent: 'center',
                                         cursor: 'pointer',
+                                        maxWidth: '100%',
+                                        display: 'block',
+                                        margin: 'auto',
+                                        maxHeight: '100%',
                                       }}
                                     />{' '}
                                   </div>
