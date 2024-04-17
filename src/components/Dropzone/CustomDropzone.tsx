@@ -418,19 +418,26 @@ function CustomDropzone(props: Props) {
   const footer = () => {
     return (
       <DialogActions style={{ height: '30px' }}>
-        {/* {uploadProgress > 0 && ( */}
-        <Box
-          sx={{ width: '40%', position: 'relative', top: '6px', right: '8rem' }}
-        >
-          <BorderLinearProgress
-            variant='determinate'
-            value={Math.floor(uploadProgress)}
-          />
-          <Typography
-            style={{ textAlign: 'center', lineHeight: 1.5 }}
-          >{`Upload In Progress...${Math.floor(uploadProgress)}%`}</Typography>
-        </Box>
-        {/* )} */}
+        {uploadProgress > 0 && (
+          <Box
+            sx={{
+              width: '40%',
+              position: 'relative',
+              top: '6px',
+              right: '8rem',
+            }}
+          >
+            <BorderLinearProgress
+              variant='determinate'
+              value={Math.floor(uploadProgress)}
+            />
+            <Typography
+              style={{ textAlign: 'center', lineHeight: 1.5 }}
+            >{`Upload In Progress...${Math.floor(
+              uploadProgress
+            )}%`}</Typography>
+          </Box>
+        )}
         <Button
           onClick={() => props.handlePopupClose(false)}
           variant='outlined'
