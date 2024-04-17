@@ -362,7 +362,7 @@ const MediaList: FC<Props> = (props: Props) => {
                         return (
                           <div className='card-item'>
                             {/* {storedMedia?.metadata?.name} */}
-                            <Card style={{ height: '315px', width: '380px' }}>
+                            <Card style={{ height: 'auto', width: '380px' }}>
                               <CardHeader
                                 style={{
                                   padding: '8px 16px',
@@ -473,6 +473,13 @@ const MediaList: FC<Props> = (props: Props) => {
 
                               <Divider />
 
+                              {/* <Scrollbars
+                                autoHide={true}
+                                hideTracksWhenNotNeeded={true}
+                                autoHeight={true}
+                                autoHeightMax={'200px'}
+                                autoHeightMin={'200px'}
+                              > */}
                               <CardContent
                                 style={{
                                   display: 'flex',
@@ -513,7 +520,9 @@ const MediaList: FC<Props> = (props: Props) => {
                                   <Typography>{'Origin: '}</Typography>
                                   <Box
                                     // component='li'
-                                    sx={{ '& > img': { mr: 2, flexShrink: 0 } }}
+                                    sx={{
+                                      '& > img': { mr: 2, flexShrink: 0 },
+                                    }}
                                     {...props}
                                   >
                                     <img
@@ -590,6 +599,7 @@ const MediaList: FC<Props> = (props: Props) => {
                                   </Typography>
                                 </div>
                               </CardContent>
+                              {/* </Scrollbars> */}
                             </Card>
                           </div>
                         );

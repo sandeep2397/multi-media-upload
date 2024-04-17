@@ -11,7 +11,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import CardContent from '@mui/material/CardContent';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { MdAttachFile } from 'react-icons/md';
@@ -524,7 +523,8 @@ function CustomDropzone(props: Props) {
                     '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
                   maxHeight: '300px',
                   // transition
-                  maxWidth: '310px!important',
+                  width: '370px!important',
+                  maxWidth: '370px!important',
                   display: 'flex',
                   flexDirection: 'row',
                   justifyContent: 'space-between',
@@ -569,24 +569,30 @@ function CustomDropzone(props: Props) {
                     />
                   )}
                 </div>
-                <div style={{ width: '70%' }}>
-                  <CardContent
+                <div style={{ width: '350px' }}>
+                  {/* <CardContent
                     style={{ display: 'flex', flexDirection: 'column' }}
+                  > */}
+                  <Typography
+                    gutterBottom
+                    fontSize={'12px'}
+                    color='#434343'
+                    component='div'
+                    fontWeight={'bold'}
+                    style={{
+                      display: 'block',
+                      maxWidth: '180px',
+                      textOverflow: 'ellipsis',
+                      overflow: 'hidden',
+                    }}
                   >
-                    <Typography
-                      gutterBottom
-                      fontSize={'12px'}
-                      color='#434343'
-                      component='div'
-                      fontWeight={'bold'}
-                    >
-                      {mediaMetaData?.name}
-                    </Typography>
-                    <Typography color='text.secondary'>{`Size:  ${size} MB`}</Typography>
-                    <Typography color='text.secondary'>
-                      {`Type:  ${mediaMetaData?.type || ''} `}
-                    </Typography>
-                  </CardContent>
+                    {mediaMetaData?.name}
+                  </Typography>
+                  <Typography color='text.secondary'>{`Size:  ${size} MB`}</Typography>
+                  <Typography color='text.secondary'>
+                    {`Type:  ${mediaMetaData?.type || ''} `}
+                  </Typography>
+                  {/* </CardContent> */}
                 </div>
               </div>
             </Grid>

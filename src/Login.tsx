@@ -1,8 +1,11 @@
 import {
   Alert,
+  Box,
   Card,
+  Chip,
   CircularProgress,
   Container,
+  Divider,
   FormControl,
   IconButton,
   InputAdornment,
@@ -28,7 +31,12 @@ import {
 } from './style';
 
 // import { signInWithEmailAndPassword } from 'firebase/auth';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  GoogleAuthProvider,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+} from 'firebase/auth';
+import provider from './authProvider';
 import { customAuth } from './firebaseConfig';
 interface Props {
   children?: null;
@@ -109,8 +117,41 @@ const Login: FC<Props> = (props) => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    const cookies = new Cookies();
+    try {
+      // const auth = getAuth();
+      // await firebase.auth().signInWithEmailAndPassword(state.username, state.password);
+      const signInRes: any = await signInWithPopup(customAuth, provider);
+      const credential: any =
+        GoogleAuthProvider.credentialFromResult(signInRes);
+      const token = credential?.accessToken;
+      const user = signInRes.user;
+      let cookieData = {
+        jwtToken: token,
+      };
+      let tempdata = JSON.stringify(cookieData);
+      cookies.set('multimedia', tempdata, {
+        path: '/',
+      });
+      navigate('/imageupload');
+      setLoginLoading(false);
+      dispatch(captureLoggedInUser(signInRes));
+    } catch (error: any) {
+      const errorCode = error.code;
+      const errorMessage = error.message;
+      // The email of the user's account used.
+      const email = error.customData.email;
+      // The AuthCredential type that was used.
+      const credential = GoogleAuthProvider.credentialFromError(error);
+      console.error('Sign In err===>', credential);
+      setLoginLoading(false);
+      setInvalidCreds(true);
+    }
+  };
+
   return (
-    <>
+    <Box style={{ alignContent: 'center', textAlign: 'center' }}>
       {loginLoading && (
         <CircularProgress
           color='primary'
@@ -118,13 +159,13 @@ const Login: FC<Props> = (props) => {
         />
       )}
       <Card
-        sx={{
+        style={{
           maxWidth: 345,
           opacity: loginLoading ? 0.3 : 1,
           pointerEvents: loginLoading ? 'none' : 'auto',
         }}
       >
-        <LoginLayoutWrapper>
+        <LoginLayoutWrapper style={{ margin: 'auto' }}>
           <Container
             fixed
             style={{ textAlign: 'center', marginBottom: '16px' }}
@@ -246,13 +287,7 @@ const Login: FC<Props> = (props) => {
                     onClick={() => {}}
                     variant='contained'
                     type='submit'
-                    startIcon={
-                      !loginLoading ? (
-                        <CircularProgress size={'sm'} color='secondary' />
-                      ) : (
-                        <MdLogin />
-                      )
-                    }
+                    startIcon={<MdLogin />}
                     // disabled={state?.username === '' || state?.password === ''}
                   >
                     <WelcomeLabel color={theme?.palette?.primary?.contrastText}>
@@ -261,6 +296,36 @@ const Login: FC<Props> = (props) => {
                   </LoginButton>
                 </FormControl>
               </StyledForm>
+              <Divider>
+                <Chip label='OR' size='small' />
+              </Divider>
+              <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
+                <LoginButton
+                  onClick={() => handleGoogleSignIn()}
+                  variant='contained'
+                  type='submit'
+                  style={{ background: '#fff' }}
+                  startIcon={
+                    <img
+                      src={require('./assets/google.png')}
+                      height='25px'
+                      width={'25px'}
+                      alt='Logo'
+                    />
+                  }
+                  // disabled={state?.username === '' || state?.password === ''}
+                >
+                  <WelcomeLabel
+                    style={{
+                      color: theme?.palette?.primary?.main,
+                      fontWeight: 'bold',
+                    }}
+                    color={theme?.palette?.primary?.main}
+                  >
+                    {'Sign In with Google'}
+                  </WelcomeLabel>
+                </LoginButton>
+              </FormControl>
             </LoginDiv>
           </Container>
         </LoginLayoutWrapper>
@@ -279,7 +344,7 @@ const Login: FC<Props> = (props) => {
         </FooterLabel>
         <FooterLabel>{'2023 All rights reserved by Pivotree'} </FooterLabel> */}
       </div>
-    </>
+    </Box>
   );
 };
 
