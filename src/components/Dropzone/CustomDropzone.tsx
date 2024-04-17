@@ -304,14 +304,8 @@ function CustomDropzone(props: Props) {
     } else {
       mediaRef = ref(mediaDb, `mediaFiles/${mediaFile?.name + '_' + v4()}`);
       try {
-        const customMetadata: any = {
-          contentType: mediaFile?.type,
-          description: state?.Description,
-          locationName: state?.Location?.label,
-          locationCode: state?.Location?.code,
-          mediaName: mediaFile?.name,
-          createdBy: userId,
-        };
+        setUploadProgress(0.5);
+
         // const uploadTask = await uploadBytes(
         //   mediaRef,
         //   mediaFile,
