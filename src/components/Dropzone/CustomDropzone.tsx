@@ -39,6 +39,7 @@ import StarRating from '../star-rating/StarRating';
 // import firebase from '../../newfirebaseConfig';
 import firebase, { FirebaseApp } from 'firebase/app';
 import { FirebaseStorage } from 'firebase/storage';
+import Scrollbars from 'react-custom-scrollbars';
 import { useGetUserId } from '../../utils/customHooks';
 
 declare module 'firebase/app' {
@@ -387,11 +388,12 @@ function CustomDropzone(props: Props) {
             <CircularProgress color='primary' style={{ zIndex: 5 }} />
           </div>
         )}
+
         <Box
           style={{
             margin: '0px 16px',
-            position: 'absolute',
-            bottom: '135px',
+            position: mode === 'edit' ? 'absolute' : 'relative',
+            bottom: mode === 'edit' ? '135px' : '0px',
             opacity: mediaLoading ? 0.3 : 1,
             pointerEvents: mediaLoading ? 'none' : 'auto',
           }}
@@ -461,145 +463,152 @@ function CustomDropzone(props: Props) {
           {/* )} */}
 
           <Divider style={{ margin: '12px' }} />
-          <Grid container spacing={2}>
-            {' '}
-            <Grid item xs={6} md={8}></Grid>
-            <Grid item xs={6} md={6}>
-              <Typography variant='h6'>Additional Meta data : </Typography>
-              <div
-                className='card-container'
-                style={{
-                  padding: '0px 8px',
-                  gridTemplateColumns: `repeat(2, 1fr)`,
-                }}
-              >
-                <div className='card-item'>
-                  <TextField
-                    id='outlined-desc'
-                    label='Description'
-                    variant='standard'
-                    type='text'
-                    name='Description'
-                    value={state?.Description}
-                    onChange={(e) => {
-                      let val = e?.target?.value;
-                      setState({
-                        ...state,
-                        Description: val,
-                      });
-                    }}
-                  />
-                </div>
-                <div className='card-item'>
-                  <CountrySelect
-                    defaultValue={state?.Location}
-                    sendLocationBack={(selectedOption: any) => {
-                      setState({
-                        ...state,
-                        Location: selectedOption,
-                      });
-                    }}
-                  />
-                </div>
-              </div>
-              <div
-                style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}
-              >
-                <h3>Rate this content:</h3>
-                <StarRating
-                  defaultValue={rating}
-                  onChange={handleRatingChange}
-                />
-              </div>
-            </Grid>
-            <Grid item xs={6} md={6}>
-              <Typography fontSize={'16px'} fontWeight={'bold'}>
-                Preview
-              </Typography>
-              <div
-                style={{
-                  borderRadius: '4px',
-                  boxShadow:
-                    '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
-                  maxHeight: '300px',
-                  // transition
-                  width: '370px!important',
-                  maxWidth: '370px!important',
-                  display: 'flex',
-                  flexDirection: 'row',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <div>
-                  {' '}
-                  {mediaMetaData?.type.includes('video') ? (
-                    <ReactPlayer
-                      playing
-                      controls
-                      volume={0}
-                      width='100%'
-                      height={'245px'}
-                      playsinline
-                      pip
-                      muted
-                      style={{
-                        position: 'relative',
-                        bottom: '10px',
-                        padding: '4px',
-                        minWidth: '200px',
+          <Scrollbars
+            autoHide={true}
+            hideTracksWhenNotNeeded={true}
+            autoHeight={true}
+            autoHeightMax={'265px'}
+            autoHeightMin={'265px'}
+          >
+            <Grid container spacing={2}>
+              {' '}
+              <Grid item xs={6} md={8}></Grid>
+              <Grid item xs={6} md={6}>
+                <Typography variant='h6'>Additional Meta data : </Typography>
+                <div
+                  className='card-container'
+                  style={{
+                    padding: '0px 8px',
+                    gridTemplateColumns: `repeat(2, 1fr)`,
+                  }}
+                >
+                  <div className='card-item'>
+                    <TextField
+                      id='outlined-desc'
+                      label='Description'
+                      variant='standard'
+                      type='text'
+                      name='Description'
+                      value={state?.Description}
+                      onChange={(e) => {
+                        let val = e?.target?.value;
+                        setState({
+                          ...state,
+                          Description: val,
+                        });
                       }}
-                      loop
-                      // muted
-                      url={mediaUrl}
-                      light={thumbnailUrl}
-                      // light={require('../../assets/noImage.png')}
-                      // url='https://www.youtube.com/watch?v=5986IgwaVKE&t=667s'
-                      // light='https://example.com/thumbnail.jpg'
                     />
-                  ) : (
-                    // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                    <img
-                      src={
-                        mediaUrl
-                          ? mediaUrl
-                          : require('../../assets/noImage.png')
-                      }
-                      height='200px'
-                      width={'260px'}
-                      alt='Image/video'
-                      style={{ padding: '8px' }}
+                  </div>
+                  <div className='card-item'>
+                    <CountrySelect
+                      defaultValue={state?.Location}
+                      sendLocationBack={(selectedOption: any) => {
+                        setState({
+                          ...state,
+                          Location: selectedOption,
+                        });
+                      }}
                     />
-                  )}
+                  </div>
                 </div>
-                <div style={{ width: '350px' }}>
-                  {/* <CardContent
+                <div
+                  style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}
+                >
+                  <h3>Rate this content:</h3>
+                  <StarRating
+                    defaultValue={rating}
+                    onChange={handleRatingChange}
+                  />
+                </div>
+              </Grid>
+              <Grid item xs={6} md={6}>
+                <Typography fontSize={'16px'} fontWeight={'bold'}>
+                  Preview
+                </Typography>
+                <div
+                  style={{
+                    borderRadius: '4px',
+                    boxShadow:
+                      '0px 2px 1px -1px rgba(0,0,0,0.2),0px 1px 1px 0px rgba(0,0,0,0.14),0px 1px 3px 0px rgba(0,0,0,0.12)',
+                    maxHeight: '300px',
+                    // transition
+                    width: '370px!important',
+                    maxWidth: '370px!important',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    {' '}
+                    {mediaMetaData?.type.includes('video') ? (
+                      <ReactPlayer
+                        playing
+                        controls
+                        volume={0}
+                        width='100%'
+                        height={'245px'}
+                        playsinline
+                        pip
+                        muted
+                        style={{
+                          position: 'relative',
+                          bottom: '10px',
+                          padding: '4px',
+                          minWidth: '200px',
+                        }}
+                        loop
+                        // muted
+                        url={mediaUrl}
+                        light={thumbnailUrl}
+                        // light={require('../../assets/noImage.png')}
+                        // url='https://www.youtube.com/watch?v=5986IgwaVKE&t=667s'
+                        // light='https://example.com/thumbnail.jpg'
+                      />
+                    ) : (
+                      // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                      <img
+                        src={
+                          mediaUrl
+                            ? mediaUrl
+                            : require('../../assets/noImage.png')
+                        }
+                        height='200px'
+                        width={'260px'}
+                        alt='Image/video'
+                        style={{ padding: '8px' }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ width: '350px' }}>
+                    {/* <CardContent
                     style={{ display: 'flex', flexDirection: 'column' }}
                   > */}
-                  <Typography
-                    gutterBottom
-                    fontSize={'12px'}
-                    color='#434343'
-                    component='div'
-                    fontWeight={'bold'}
-                    style={{
-                      display: 'block',
-                      maxWidth: '180px',
-                      textOverflow: 'ellipsis',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {mediaMetaData?.name}
-                  </Typography>
-                  <Typography color='text.secondary'>{`Size:  ${size} MB`}</Typography>
-                  <Typography color='text.secondary'>
-                    {`Type:  ${mediaMetaData?.type || ''} `}
-                  </Typography>
-                  {/* </CardContent> */}
+                    <Typography
+                      gutterBottom
+                      fontSize={'12px'}
+                      color='#434343'
+                      component='div'
+                      fontWeight={'bold'}
+                      style={{
+                        display: 'block',
+                        maxWidth: '180px',
+                        textOverflow: 'ellipsis',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {mediaMetaData?.name}
+                    </Typography>
+                    <Typography color='text.secondary'>{`Size:  ${size} MB`}</Typography>
+                    <Typography color='text.secondary'>
+                      {`Type:  ${mediaMetaData?.type || ''} `}
+                    </Typography>
+                    {/* </CardContent> */}
+                  </div>
                 </div>
-              </div>
+              </Grid>
             </Grid>
-          </Grid>
-
+          </Scrollbars>
           {invalidFileType && (
             <Snackbar
               open={invalidFileType}
@@ -633,10 +642,10 @@ function CustomDropzone(props: Props) {
         // ...style,
         // minWidth: '1050px',
         width: '1050px',
-        height: '485px',
+        height: '495px',
       }}
       bodyStyle={{
-        minHeight: '345px',
+        minHeight: '355px',
         maxHeight: '345px',
         height: 'auto',
       }}
