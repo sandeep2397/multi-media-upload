@@ -2,13 +2,13 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   Divider,
   Grid,
   OutlinedInput,
   Snackbar,
   TextField,
   Typography,
+  styled,
   useTheme,
 } from '@mui/material';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -27,7 +27,7 @@ import {
   listAll,
   ref,
   updateMetadata,
-  uploadBytes,
+  uploadBytesResumable,
 } from 'firebase/storage';
 import { FaEdit, FaUpload } from 'react-icons/fa';
 import { MdCloudUpload, MdOutlineCancel } from 'react-icons/md';
@@ -37,6 +37,9 @@ import CustomDialog from '../Dialog/CustomDialog';
 import CountrySelect from '../select/Dropdown';
 import StarRating from '../star-rating/StarRating';
 // import firebase from '../../newfirebaseConfig';
+import LinearProgress, {
+  linearProgressClasses,
+} from '@mui/material/LinearProgress';
 import firebase, { FirebaseApp } from 'firebase/app';
 import { FirebaseStorage } from 'firebase/storage';
 import { useGetUserId } from '../../utils/customHooks';
@@ -61,6 +64,18 @@ interface State {
   imageDimension?: any;
 }
 
+const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
+  height: 10,
+  borderRadius: 5,
+  [`&.${linearProgressClasses.colorPrimary}`]: {
+    backgroundColor: '#c3b4b4',
+  },
+  [`& .${linearProgressClasses.bar}`]: {
+    borderRadius: 5,
+    backgroundColor: theme.palette.mode === 'light' ? '#1a90ff' : '#308fe8',
+  },
+}));
+
 function CustomDropzone(props: Props) {
   const theme: any = useTheme();
   const userId = useGetUserId();
@@ -73,13 +88,13 @@ function CustomDropzone(props: Props) {
 
   const dispatch = useDispatch();
   const { mode, rowData } = props;
-  const [mediaMetaData, setMediaMetaData]: any = useState(null);
+  const [mediaFile, setMediaFile]: any = useState(null);
   const [uploadedToServer, setMediaUploadToServer]: any = useState(undefined);
   const [thumbnailUrl, setThumbnailUrl] = useState<any>(null);
   const [invalidMedia, setInvalidMedia] = useState(false);
   const [mediaDelete, setMediaDelete] = useState(false);
   const [editMedia, setMediaEdit] = useState(false);
-
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [mediaLoading, setMediaLoading] = useState(false);
   // setMediaLoading(true)
 
@@ -159,7 +174,7 @@ function CustomDropzone(props: Props) {
       if (filePermisible) {
         const createMediaBlobUrl = URL.createObjectURL(mediaInfo);
         setMediaUrl(createMediaBlobUrl);
-        setMediaMetaData(mediaInfo);
+        setMediaFile(mediaInfo);
         setInvalidMedia(false);
         setState({
           ...state,
@@ -189,7 +204,7 @@ function CustomDropzone(props: Props) {
         setInvalidMedia(true);
         setMediaUrl('');
         setInvalidMediaType(true);
-        setMediaMetaData(null);
+        setMediaFile(null);
         toast.error('Invalid File type attached', {
           className: 'toast-error',
         });
@@ -200,7 +215,7 @@ function CustomDropzone(props: Props) {
   useEffect(() => {
     if (mode === 'edit') {
       setMediaUrl(rowData?.downloadUrl);
-      setMediaMetaData({
+      setMediaFile({
         path:
           rowData?.metadata?.customMetadata?.mediaName ||
           rowData?.metadata?.name,
@@ -239,10 +254,10 @@ function CustomDropzone(props: Props) {
     setLoading(true);
     setMediaLoading(true);
 
-    // if (mediaMetaData?.type.includes('image')) {
-    //   mediaRef = ref(mediaDb, `images/${mediaMetaData?.name + '_' + v4()}`);
+    // if (mediaFile?.type.includes('image')) {
+    //   mediaRef = ref(mediaDb, `images/${mediaFile?.name + '_' + v4()}`);
     // } else {
-    //   mediaRef = ref(mediaDb, `videos/${mediaMetaData?.name + '_' + v4()}`);
+    //   mediaRef = ref(mediaDb, `videos/${mediaFile?.name + '_' + v4()}`);
     // }
     if (props?.mode === 'edit') {
       // Edit feature
@@ -254,7 +269,7 @@ function CustomDropzone(props: Props) {
           const downloadUrl = await getDownloadURL(fileRef);
           if (downloadUrl === rowData?.downloadUrl) {
             try {
-              // let metadata: any = await getMetadata(mediaMetaData);
+              // let metadata: any = await getMetadata(mediaFile);
               let metadata = {
                 ...rowData,
                 customMetadata: {
@@ -262,7 +277,7 @@ function CustomDropzone(props: Props) {
                   description: state?.Description,
                   locationName: state?.Location?.label,
                   locationCode: state?.Location?.code,
-                  mediaName: mediaMetaData?.name,
+                  mediaName: mediaFile?.name,
                   rating,
                   // createdBy: userId,
                   modifiedBy: userId,
@@ -287,36 +302,94 @@ function CustomDropzone(props: Props) {
         console.error('Error deleting file:', error);
       }
     } else {
-      mediaRef = ref(mediaDb, `mediaFiles/${mediaMetaData?.name + '_' + v4()}`);
+      mediaRef = ref(mediaDb, `mediaFiles/${mediaFile?.name + '_' + v4()}`);
       try {
-        const uploadedFile = await uploadBytes(mediaRef, mediaMetaData);
-        let metadata: any = await getMetadata(mediaRef);
-        metadata = {
-          ...metadata,
-          customMetadata: {
-            description: state?.Description,
-            locationName: state?.Location?.label,
-            locationCode: state?.Location?.code,
-            mediaName: mediaMetaData?.name,
-            createdBy: userId,
-          },
+        const customMetadata: any = {
+          contentType: mediaFile?.type,
+          description: state?.Description,
+          locationName: state?.Location?.label,
+          locationCode: state?.Location?.code,
+          mediaName: mediaFile?.name,
+          createdBy: userId,
         };
-        setLoading(false);
-        setMediaUploadToServer(true);
-        props.handlePopupClose(true);
+        // const uploadTask = await uploadBytes(
+        //   mediaRef,
+        //   mediaFile,
+        //   customMetadata
+        // );
+        const uploadTask = uploadBytesResumable(mediaRef, mediaFile);
+        uploadTask.on(
+          'state_changed',
+          (snapshot: any) => {
+            // Observe state change events such as progress, pause, and resume
+            // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+            const progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+            switch (snapshot.state) {
+              case 'paused':
+                console.log('Upload is paused');
+                break;
+              case 'running':
+                console.log('Upload is running');
+                break;
+            }
+          },
+          (error: any) => {
+            console.error('Upload error ' + error);
+            // Handle unsuccessful uploads
+          },
+          async () => {
+            const uploadedMediaRef = uploadTask?.snapshot?.ref;
+            let metadata: any = await getMetadata(uploadedMediaRef);
+            metadata = {
+              ...uploadTask?.snapshot?.ref,
+              customMetadata: {
+                description: state?.Description,
+                locationName: state?.Location?.label,
+                locationCode: state?.Location?.code,
+                mediaName: mediaFile?.name,
+                createdBy: userId,
+              },
+            };
+            try {
+              await updateMetadata(uploadedMediaRef, metadata);
+              setLoading(false);
+              setMediaUploadToServer(true);
+              props.handlePopupClose(true);
+            } catch (error: any) {
+              console.error('Upload error ' + error);
+              setInvalidMedia(true);
+            }
+          }
+        );
+
+        // const uploadedFile = await uploadBytes(mediaRef, mediaFile);
+        // let metadata: any = await getMetadata(mediaRef);
+        // metadata = {
+        //   ...metadata,
+        //   customMetadata: {
+        //     description: state?.Description,
+        //     locationName: state?.Location?.label,
+        //     locationCode: state?.Location?.code,
+        //     mediaName: mediaFile?.name,
+        //     createdBy: userId,
+        //   },
+        // };
+
         // Object.assign(metadata.customMetadata, {
         //   description: 'Custom name',
         // });
-        try {
-          const modifiedMetaData = await updateMetadata(mediaRef, metadata);
-        } catch (err) {
-          setInvalidMedia(true);
-        }
+        // try {
+        //   const modifiedMetaData = await updateMetadata(mediaRef, metadata);
+        // } catch (err) {
+        //   setInvalidMedia(true);
+        // }
       } catch (err) {
         setInvalidMedia(true);
       }
     }
-    // uploadBytes(mediaRef, mediaMetaData)
+    // uploadBytes(mediaRef, mediaFile)
     //   .then(() => {
     //     setLoading(false);
     //     fetchAllMediaApi();
@@ -327,9 +400,7 @@ function CustomDropzone(props: Props) {
     //   });
   };
 
-  let size = mediaMetaData?.size
-    ? (mediaMetaData?.size / (1024 * 1024)).toFixed(2)
-    : 0;
+  let size = mediaFile?.size ? (mediaFile?.size / (1024 * 1024)).toFixed(2) : 0;
 
   const handleFileChange = (event: any) => {
     const file = event.target.files[0];
@@ -346,7 +417,20 @@ function CustomDropzone(props: Props) {
 
   const footer = () => {
     return (
-      <DialogActions>
+      <DialogActions style={{ height: '30px' }}>
+        {/* {uploadProgress > 0 && ( */}
+        <Box
+          sx={{ width: '40%', position: 'relative', top: '6px', right: '8rem' }}
+        >
+          <BorderLinearProgress
+            variant='determinate'
+            value={Math.floor(uploadProgress)}
+          />
+          <Typography
+            style={{ textAlign: 'center', lineHeight: 1.5 }}
+          >{`Upload In Progress...${Math.floor(uploadProgress)}%`}</Typography>
+        </Box>
+        {/* )} */}
         <Button
           onClick={() => props.handlePopupClose(false)}
           variant='outlined'
@@ -359,7 +443,7 @@ function CustomDropzone(props: Props) {
           variant='contained'
           startIcon={props.mode === 'edit' ? <FaEdit /> : <FaUpload />}
           onClick={() => handleUploadClick()}
-          disabled={mediaMetaData === null || invalidFileType}
+          disabled={mediaFile === null || invalidFileType}
           style={{
             height: '32px',
             marginRight: '8px',
@@ -386,7 +470,10 @@ function CustomDropzone(props: Props) {
             }}
           >
             {' '}
-            <CircularProgress color='primary' style={{ zIndex: 5 }} />
+            {/* <CircularProgress color='primary' style={{ zIndex: 5 }} /> */}
+            {/* {uploadProgress > 0 && (
+              <LinearProgressWithLabel variant='determinate' value={progress} />
+            )} */}
           </div>
         )}
 
@@ -541,7 +628,7 @@ function CustomDropzone(props: Props) {
               >
                 <div style={{ flex: '0 0 60%', maxWidth: '60%' }}>
                   {' '}
-                  {mediaMetaData?.type.includes('video') ? (
+                  {mediaFile?.type.includes('video') ? (
                     <div>
                       <ReactPlayer
                         playing
@@ -605,11 +692,11 @@ function CustomDropzone(props: Props) {
                       overflow: 'hidden',
                     }}
                   >
-                    {mediaMetaData?.name}
+                    {mediaFile?.name}
                   </Typography>
                   <Typography color='text.secondary'>{`Size:  ${size} MB`}</Typography>
                   <Typography color='text.secondary'>
-                    {`Type:  ${mediaMetaData?.type || ''} `}
+                    {`Type:  ${mediaFile?.type || ''} `}
                   </Typography>
                   {/* </CardContent> */}
                 </div>

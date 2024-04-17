@@ -33,6 +33,7 @@ import { setCachedMediaList } from './redux/root_actions';
 import InputBase from '@mui/material/InputBase';
 import Paper from '@mui/material/Paper';
 import { deepPurple, teal } from '@mui/material/colors';
+import Scrollbars from 'react-custom-scrollbars';
 import { FaSearch, FaUpload } from 'react-icons/fa';
 import { MdPermMedia } from 'react-icons/md';
 import { MediaDefCols, MediaListPath } from './Media';
@@ -351,7 +352,18 @@ const MediaList: FC<Props> = (props: Props) => {
                   <CircularProgress />
                 </div>
               ) : (
-                <>
+                <Scrollbars
+                  className='custom-scrollbar'
+                  autoHide={false}
+                  hideTracksWhenNotNeeded={false}
+                  autoHeight={false}
+                  style={{
+                    height: window.innerHeight - 140 + 'px',
+                    // width: isLargeScreen ? '2000px' : width + 'px',
+                    // width: '97vw',
+                  }}
+                  // autoHeightMax={'calc(100vh - 140px)'}
+                >
                   <div className='card-container'>
                     {Array.isArray(bindMediaData) &&
                       bindMediaData?.map((storedMedia: any) => {
@@ -489,35 +501,34 @@ const MediaList: FC<Props> = (props: Props) => {
                                     ?.description ||
                                     'No Description Available'}{' '}
                                 </SubHeader>
-                                {storedMedia?.metadata?.contentType?.includes(
-                                  'video'
-                                ) ? (
-                                  <ReactPlayer
-                                    playing
-                                    controls
-                                    volume={0}
-                                    width='312px'
-                                    height={'135px'}
-                                    playsinline
-                                    pip
-                                    loop
-                                    muted={true}
-                                    url={storedMedia?.downloadUrl}
-                                    light={thumbnailUrl}
-                                  />
-                                ) : (
-                                  // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                                  <div
-                                    style={{
-                                      padding: '8px',
-                                      paddingTop: '0px',
-                                      textAlign: 'center',
-                                      height: '155px',
-                                      width: '300px',
-                                      // width: 'auto',
-                                    }}
-                                  >
-                                    {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
+                                <div
+                                  style={{
+                                    padding: '8px',
+                                    paddingTop: '0px',
+                                    textAlign: 'center',
+                                    height: '145px',
+                                    width: '300px',
+                                    // width: 'auto',
+                                  }}
+                                >
+                                  {storedMedia?.metadata?.contentType?.includes(
+                                    'video'
+                                  ) ? (
+                                    <ReactPlayer
+                                      playing
+                                      controls
+                                      volume={0}
+                                      width='312px'
+                                      height={'135px'}
+                                      playsinline
+                                      pip
+                                      loop
+                                      muted={true}
+                                      url={storedMedia?.downloadUrl}
+                                      light={thumbnailUrl}
+                                    />
+                                  ) : (
+                                    // eslint-disable-next-line jsx-a11y/img-redundant-alt
                                     <img
                                       src={storedMedia?.downloadUrl}
                                       alt={`Image${onlyName}`}
@@ -538,14 +549,9 @@ const MediaList: FC<Props> = (props: Props) => {
                                         margin: 'auto',
                                         maxHeight: '100%',
                                       }}
-                                    />{' '}
-                                  </div>
-                                  // <CardMedia
-                                  //   sx={{ height: 150, width: '80px' }}
-                                  //   image={storedMedia?.downloadUrl}
-                                  //   title={`Image ${onlyName}`}
-                                  // />
-                                )}
+                                    />
+                                  )}
+                                </div>
                                 <Divider />
                                 {/* <Scrollbars
                               autoHide={true}
@@ -729,6 +735,7 @@ const MediaList: FC<Props> = (props: Props) => {
                         );
                       })}
                   </div>
+
                   {Array.isArray(bindMediaData) &&
                     bindMediaData?.length === 0 && (
                       <div
@@ -752,7 +759,7 @@ const MediaList: FC<Props> = (props: Props) => {
 
                       // </div>
                     )}
-                </>
+                </Scrollbars>
               )}
             </div>
           </Grid>

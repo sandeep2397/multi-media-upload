@@ -56,3 +56,24 @@
   border-radius: 8px;
   text-align: center;
 }
+
+/* CustomScrollbar.css */
+
+/* Make scrollbar always visible */
+.react-custom-scrollbars-track-vertical {
+  visibility: visible !important;
+}
+
+/* Adjust scrollbar appearance as needed */
+.react-custom-scrollbars-track {
+  background: transparent;
+}
+
+.react-custom-scrollbars-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.react-custom-scrollbars-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
+}
