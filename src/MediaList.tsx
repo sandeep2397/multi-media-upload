@@ -13,7 +13,6 @@ import {
   Typography,
   useTheme,
 } from '@mui/material';
-import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import React, { FC, useCallback, useEffect, useState } from 'react';
 import ReactPlayer from 'react-player';
@@ -39,6 +38,7 @@ import { MdPermMedia } from 'react-icons/md';
 import { MediaDefCols, MediaListPath } from './Media';
 import CustomDropzone from './components/Dropzone/CustomDropzone';
 import LongMenu from './components/menu/MenuList';
+import { StyledCard, SubHeader } from './style';
 import { convertToBrowserTimeZone } from './utils/customUtils';
 import useDebounce from './utils/debounceHook';
 
@@ -74,6 +74,8 @@ const MediaList: FC<Props> = (props: Props) => {
     popupState: {},
   };
   const [state, setState] = useState<State>(initState);
+  const [deleteSingleMedia, setDeleteSingleMedia] = useState<any>({});
+  const [editSingleMedia, setEditedSingleMedia] = useState<any>({});
 
   const [mediaLoading, setMediaLoading] = useState(false);
   // setMediaLoading(true)
@@ -122,6 +124,8 @@ const MediaList: FC<Props> = (props: Props) => {
       dispatch(setCachedMediaList(sortedArr));
       setBindMediaData(sortedArr);
       setMediaLoading(false);
+      setEditedSingleMedia({});
+      setDeleteSingleMedia({});
 
       // setFileDetails(fileDetails);
     } catch (error) {
@@ -153,6 +157,10 @@ const MediaList: FC<Props> = (props: Props) => {
   }, []);
 
   const handleDelete = async (mediaInfo: any) => {
+    setDeleteSingleMedia({
+      ...mediaInfo,
+      shouldDelete: true,
+    });
     try {
       // setMediaLoading(true);
       const filesList = await listAll(ref(mediaDb, 'mediaFiles'));
@@ -357,22 +365,69 @@ const MediaList: FC<Props> = (props: Props) => {
                         let storedMdName = storedMedia?.metadata?.name || '';
                         let nameList = storedMdName?.split('.');
                         let onlyName = nameList?.[0] || '';
-                        let userName =
+                        let modifiedUname =
                           storedMedia?.metadata?.customMetadata?.modifiedBy?.toUpperCase();
+                        let createdBy =
+                          storedMedia?.metadata?.customMetadata?.createdBy?.toUpperCase();
+                        let blurMedia = false;
+                        // blur during edit and delete function
+                        if (
+                          storedMdName === deleteSingleMedia?.metadata?.name &&
+                          deleteSingleMedia?.shouldDelete
+                        ) {
+                          blurMedia = true;
+                        }
+
+                        if (
+                          storedMdName === deleteSingleMedia?.metadata?.name &&
+                          editSingleMedia?.shouldEdit
+                        ) {
+                          blurMedia = true;
+                        }
+
                         return (
                           <div className='card-item'>
                             {/* {storedMedia?.metadata?.name} */}
-                            <Card style={{ height: 'auto', width: '380px' }}>
+                            {blurMedia && (
+                              <div
+                                style={{
+                                  // width: '200px',
+                                  position: 'relative',
+                                  top: '100px',
+                                  left: '160px',
+                                  zIndex: 10,
+                                  height: '10px',
+                                }}
+                              >
+                                {' '}
+                                <CircularProgress
+                                  color='primary'
+                                  style={{ zIndex: 5 }}
+                                />
+                              </div>
+                            )}
+                            <StyledCard
+                              style={{
+                                height: 'auto',
+                                width: '380px',
+                                opacity: blurMedia ? 0.3 : 1,
+                              }}
+                            >
                               <CardHeader
                                 style={{
                                   padding: '8px 16px',
                                   color: theme?.palette?.primary?.main,
                                 }}
                                 title={onlyName}
-                                subheader={
-                                  storedMedia?.metadata?.customMetadata
-                                    ?.description || 'No Description Available'
-                                }
+                                sx={{
+                                  '& .MuiCardHeader-title': {
+                                    display: 'block',
+                                    maxWidth: '231px',
+                                    overflow: 'hidden',
+                                    textOverflow: 'ellipsis',
+                                    fontSize: '16px',
+                                  },
+                                }}
                                 color='primary'
                                 action={
                                   <div
@@ -417,191 +472,256 @@ const MediaList: FC<Props> = (props: Props) => {
                                   </div>
                                 }
                               />
-                              {storedMedia?.metadata?.contentType?.includes(
-                                'video'
-                              ) ? (
-                                <ReactPlayer
-                                  playing
-                                  controls
-                                  volume={0}
-                                  width='312px'
-                                  height={'135px'}
-                                  playsinline
-                                  pip
-                                  loop
-                                  muted={true}
-                                  url={storedMedia?.downloadUrl}
-                                  light={thumbnailUrl}
-                                />
-                              ) : (
-                                // eslint-disable-next-line jsx-a11y/img-redundant-alt
-                                <div
-                                  style={{
-                                    padding: '8px',
-                                    paddingTop: '0px',
-                                    textAlign: 'center',
-                                    height: '125px',
-                                    width: '150px',
-                                  }}
-                                >
-                                  {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
-                                  <img
-                                    src={storedMedia?.downloadUrl}
-                                    height='125px'
-                                    width={'100%'}
-                                    alt={`Image${onlyName}`}
-                                    onClick={() => {
-                                      setState({
-                                        ...state,
-                                        isOpenPopup: true,
-                                        popupState: storedMedia,
-                                        popupType: 'edit',
-                                      });
-                                    }}
-                                    style={{
-                                      padding: '8px',
-                                      alignContent: 'center',
-                                      cursor: 'pointer',
-                                    }}
-                                  />{' '}
-                                </div>
-                                // <CardMedia
-                                //   sx={{ height: 150, width: '80px' }}
-                                //   image={storedMedia?.downloadUrl}
-                                //   title={`Image ${onlyName}`}
-                                // />
-                              )}
-
-                              <Divider />
-
-                              {/* <Scrollbars
-                                autoHide={true}
-                                hideTracksWhenNotNeeded={true}
-                                autoHeight={true}
-                                autoHeightMax={'200px'}
-                                autoHeightMin={'200px'}
-                              > */}
-                              <CardContent
-                                style={{
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  padding: '8px 12px',
+                              <div
+                                onClick={(e: any) => {
+                                  // e?.stopPropagation
+                                  setState({
+                                    ...state,
+                                    isOpenPopup: true,
+                                    popupState: storedMedia,
+                                    popupType: 'edit',
+                                  });
                                 }}
                               >
-                                <Typography
-                                  style={{
-                                    textAlign: 'left',
-                                    fontSize: '12px',
-                                  }}
-                                  color='text.secondary'
-                                >{`Size:  ${size} MB`}</Typography>
-
-                                <Typography
-                                  style={{
-                                    textAlign: 'left',
-                                    fontSize: '12px',
-                                  }}
-                                  color='text.secondary'
-                                >
-                                  {`Type:  ${
-                                    storedMedia?.metadata?.contentType || ''
-                                  } `}
-                                </Typography>
-
-                                <Typography
-                                  style={{
-                                    textAlign: 'left',
-                                    fontSize: '12px',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    gap: '6px',
-                                  }}
-                                  color='text.secondary'
-                                >
-                                  <Typography>{'Origin: '}</Typography>
-                                  <Box
-                                    // component='li'
-                                    sx={{
-                                      '& > img': { mr: 2, flexShrink: 0 },
-                                    }}
-                                    {...props}
-                                  >
-                                    <img
-                                      loading='lazy'
-                                      width='20'
-                                      style={{
-                                        marginRight: '4px',
-                                        marginTop: '4px',
-                                      }}
-                                      srcSet={`https://flagcdn.com/w20/${storedMedia?.metadata?.customMetadata?.locationCode?.toLowerCase()}.png 2x`}
-                                      src={`https://flagcdn.com/w20/${storedMedia?.metadata?.customMetadata?.locationCode?.toLowerCase()}.png`}
-                                      alt=''
-                                    />
-                                    {/* <Typography style={{ marginTop: '-4px' }}> */}
-                                    {
-                                      storedMedia?.metadata?.customMetadata
-                                        ?.locationName
-                                    }
-                                    {/* </Typography> */}
-                                  </Box>
-                                </Typography>
-                                <Typography
-                                  style={{
-                                    textAlign: 'left',
-                                    fontSize: '12px',
-                                  }}
-                                  color='text.secondary'
-                                >
-                                  {`Modified At :  ${convertToBrowserTimeZone(
-                                    storedMedia?.metadata?.timeCreated
-                                  )} `}
-                                </Typography>
-
-                                <div
-                                  style={{
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    gap: '4px',
-                                  }}
-                                >
-                                  <Typography
-                                    style={{
-                                      textAlign: 'left',
-                                      fontSize: '12px',
-                                    }}
-                                    fontWeight={'400'}
-                                    color='text.primary'
-                                  >
-                                    {` Last Modified By : `}
-                                  </Typography>
-                                  <Avatar
-                                    alt={userName}
-                                    sx={{
-                                      bgcolor: userName
-                                        ?.toLowerCase()
-                                        ?.includes('sandeep'.toLowerCase())
-                                        ? deepPurple[500]
-                                        : teal[500],
-                                      width: 22,
-                                      height: 22,
-                                      fontSize: '12px',
-                                    }}
-                                    src='/static/images/avatar/2.jpg'
+                                {' '}
+                                <SubHeader>
+                                  {storedMedia?.metadata?.customMetadata
+                                    ?.description ||
+                                    'No Description Available'}{' '}
+                                </SubHeader>
+                                {storedMedia?.metadata?.contentType?.includes(
+                                  'video'
+                                ) ? (
+                                  <ReactPlayer
+                                    playing
+                                    controls
+                                    volume={0}
+                                    width='312px'
+                                    height={'135px'}
+                                    playsinline
+                                    pip
+                                    loop
+                                    muted={true}
+                                    url={storedMedia?.downloadUrl}
+                                    light={thumbnailUrl}
                                   />
+                                ) : (
+                                  // eslint-disable-next-line jsx-a11y/img-redundant-alt
+                                  <div
+                                    style={{
+                                      padding: '8px',
+                                      paddingTop: '0px',
+                                      textAlign: 'center',
+                                      height: '125px',
+                                      width: '150px',
+                                    }}
+                                  >
+                                    {/* eslint-disable-next-line jsx-a11y/img-redundant-alt */}
+                                    <img
+                                      src={storedMedia?.downloadUrl}
+                                      height='125px'
+                                      width={'100%'}
+                                      alt={`Image${onlyName}`}
+                                      onClick={() => {
+                                        setState({
+                                          ...state,
+                                          isOpenPopup: true,
+                                          popupState: storedMedia,
+                                          popupType: 'edit',
+                                        });
+                                      }}
+                                      style={{
+                                        padding: '8px',
+                                        alignContent: 'center',
+                                        cursor: 'pointer',
+                                      }}
+                                    />{' '}
+                                  </div>
+                                  // <CardMedia
+                                  //   sx={{ height: 150, width: '80px' }}
+                                  //   image={storedMedia?.downloadUrl}
+                                  //   title={`Image ${onlyName}`}
+                                  // />
+                                )}
+                                <Divider />
+                                {/* <Scrollbars
+                              autoHide={true}
+                              hideTracksWhenNotNeeded={true}
+                              autoHeight={true}
+                              autoHeightMax={'200px'}
+                              autoHeightMin={'200px'}
+                            > */}
+                                <CardContent
+                                  style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    padding: '8px 12px',
+                                  }}
+                                >
                                   <Typography
                                     style={{
                                       textAlign: 'left',
                                       fontSize: '12px',
                                     }}
-                                    fontWeight={'400'}
-                                    color='text.primary'
+                                    color='text.secondary'
+                                  >{`Size:  ${size} MB`}</Typography>
+
+                                  <Typography
+                                    style={{
+                                      textAlign: 'left',
+                                      fontSize: '12px',
+                                    }}
+                                    color='text.secondary'
                                   >
-                                    {` ${storedMedia?.metadata?.customMetadata?.modifiedBy} `}
+                                    {`Type:  ${
+                                      storedMedia?.metadata?.contentType || ''
+                                    } `}
                                   </Typography>
-                                </div>
-                              </CardContent>
+
+                                  <Typography
+                                    style={{
+                                      textAlign: 'left',
+                                      fontSize: '12px',
+                                      display: 'flex',
+                                      flexDirection: 'row',
+                                      gap: '6px',
+                                    }}
+                                    color='text.secondary'
+                                  >
+                                    <Typography>{'Origin: '}</Typography>
+                                    <Box
+                                      // component='li'
+                                      sx={{
+                                        '& > img': { mr: 2, flexShrink: 0 },
+                                      }}
+                                      {...props}
+                                    >
+                                      <img
+                                        loading='lazy'
+                                        width='20'
+                                        style={{
+                                          marginRight: '4px',
+                                          marginTop: '4px',
+                                        }}
+                                        srcSet={`https://flagcdn.com/w20/${storedMedia?.metadata?.customMetadata?.locationCode?.toLowerCase()}.png 2x`}
+                                        src={`https://flagcdn.com/w20/${storedMedia?.metadata?.customMetadata?.locationCode?.toLowerCase()}.png`}
+                                        alt=''
+                                      />
+                                      {/* <Typography style={{ marginTop: '-4px' }}> */}
+                                      {
+                                        storedMedia?.metadata?.customMetadata
+                                          ?.locationName
+                                      }
+                                      {/* </Typography> */}
+                                    </Box>
+                                  </Typography>
+                                  <Typography
+                                    style={{
+                                      textAlign: 'left',
+                                      fontSize: '12px',
+                                    }}
+                                    color='text.secondary'
+                                  >
+                                    {`Modified At :  ${convertToBrowserTimeZone(
+                                      storedMedia?.metadata?.timeCreated
+                                    )} `}
+                                  </Typography>
+
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      flexDirection: 'row',
+                                      gap: '4px',
+                                    }}
+                                  >
+                                    <Typography
+                                      style={{
+                                        textAlign: 'left',
+                                        fontSize: '12px',
+                                      }}
+                                      fontWeight={'400'}
+                                      color='text.primary'
+                                    >
+                                      {`Created By : `}
+                                    </Typography>
+                                    <Avatar
+                                      alt={createdBy}
+                                      sx={{
+                                        bgcolor: createdBy
+                                          ?.toLowerCase()
+                                          ?.includes('sandeep'.toLowerCase())
+                                          ? deepPurple[500]
+                                          : teal[500],
+                                        width: 22,
+                                        height: 22,
+                                        fontSize: '12px',
+                                      }}
+                                      src='/static/images/avatar/2.jpg'
+                                    />
+                                    <Typography
+                                      style={{
+                                        textAlign: 'left',
+                                        fontSize: '12px',
+                                      }}
+                                      fontWeight={'400'}
+                                      color='text.primary'
+                                    >
+                                      {` ${(
+                                        storedMedia?.metadata?.customMetadata
+                                          ?.createdBy || modifiedUname
+                                      )?.toLowerCase()} `}
+                                    </Typography>
+                                  </div>
+
+                                  {modifiedUname && (
+                                    <div
+                                      style={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        gap: '4px',
+                                      }}
+                                    >
+                                      <Typography
+                                        style={{
+                                          textAlign: 'left',
+                                          fontSize: '12px',
+                                        }}
+                                        fontWeight={'400'}
+                                        color='text.primary'
+                                      >
+                                        {` Last Modified By : `}
+                                      </Typography>
+                                      <Avatar
+                                        alt={modifiedUname}
+                                        sx={{
+                                          bgcolor: modifiedUname
+                                            ?.toLowerCase()
+                                            ?.includes('sandeep'.toLowerCase())
+                                            ? deepPurple[500]
+                                            : teal[500],
+                                          width: 22,
+                                          height: 22,
+                                          fontSize: '12px',
+                                        }}
+                                        src='/static/images/avatar/2.jpg'
+                                      />
+                                      <Typography
+                                        style={{
+                                          textAlign: 'left',
+                                          fontSize: '12px',
+                                        }}
+                                        fontWeight={'400'}
+                                        color='text.primary'
+                                      >
+                                        {` ${storedMedia?.metadata?.customMetadata?.modifiedBy} `}
+                                      </Typography>
+                                    </div>
+                                  )}
+                                </CardContent>{' '}
+                              </div>
+
                               {/* </Scrollbars> */}
-                            </Card>
+                            </StyledCard>
                           </div>
                         );
                       })}
@@ -691,8 +811,17 @@ const MediaList: FC<Props> = (props: Props) => {
           <CustomDropzone
             mode={state?.popupType}
             rowData={state?.popupState}
-            handlePopupClose={(success: boolean, mode: string) => {
+            handlePopupClose={(
+              success: boolean,
+              mode: string,
+              rowData: any
+            ) => {
               if (mode === 'edit') {
+                let newData = {
+                  ...rowData,
+                  shouldEdit: true,
+                };
+                setEditedSingleMedia(newData);
                 fetchAllMediaApi();
                 setMediaEdit(true);
               } else if (success) {

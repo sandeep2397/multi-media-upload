@@ -1,5 +1,5 @@
 import styled from '@emotion/styled';
-import { Button, FormLabel, Grid } from '@mui/material';
+import { Button, Card, FormLabel, Grid, Typography } from '@mui/material';
 import { rgba } from 'polished';
 
 interface Props {
@@ -160,4 +160,27 @@ export const UserLabel = styled.h6`
   height: auto;
   margin: 0;
   line-height: 1.3;
+`;
+
+export const SubHeader = styled(Typography)`
+  font-size: 12px;
+  margin: 0;
+  font-family: Arial;
+  font-weight: 400;
+  font-size: 0.8571428571428571rem;
+  line-height: 1.5;
+  letter-spacing: 0.00938em;
+  color: rgba(0, 0, 0, 0.6);
+  display: block;
+  text-align: left;
+  margin: 8px 16px;
+  margin-top: -8px;
+`;
+
+export const StyledCard = styled(Card)`
+  transition: transform 0.3s ease;
+  cursor: pointer;
+  &:hover {
+    transform: scale(1.05);
+  }
 `;

@@ -7,6 +7,7 @@ export const MediaDefCols = [
   'rating',
   'timeCreated',
   'modifiedBy',
+  'createdBy',
   'size',
 ];
 
@@ -14,6 +15,14 @@ export const MediaListPath = {
   fullPath: {
     id: '$.metadata.fullPath',
     locale: 'fullPath',
+    cell: {
+      type: 'text',
+      dataType: 'string',
+    },
+  },
+  createdBy: {
+    id: '$.metadata.customMetadata.createdBy',
+    locale: 'createdBy',
     cell: {
       type: 'text',
       dataType: 'string',

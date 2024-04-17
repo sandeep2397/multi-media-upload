@@ -20,9 +20,14 @@ const LongMenu: React.FC<Props> = (props: Props) => {
   const open = Boolean(anchorEl);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    event?.stopPropagation();
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = (option: string) => {
+  const handleClose = (
+    event: React.MouseEvent<HTMLElement>,
+    option: string
+  ) => {
+    event?.stopPropagation();
     if (option === 'Delete') {
       props.deleteCallbackHandler();
     } else if (option === 'Edit') {
@@ -62,7 +67,7 @@ const LongMenu: React.FC<Props> = (props: Props) => {
           <MenuItem
             key={option}
             selected={option === 'Pyxis'}
-            onClick={() => handleClose(option)}
+            onClick={(event) => handleClose(event, option)}
           >
             <ListItemIcon>
               {option === 'Edit' ? (
