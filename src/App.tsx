@@ -9,6 +9,7 @@ import {
   useNavigate,
   useParams,
 } from 'react-router-dom';
+import ErrorBoundary from './Errorboundary';
 import { PrivateRoute } from './PrivateRoute';
 import { routes } from './routes';
 import Topbar from './Topbar';
@@ -82,54 +83,56 @@ const App: FC<Props> = (props: Props) => {
   let crumbs: any = [];
   return (
     <ThemeProvider theme={gettheme()}>
-      <Global styles={css``} />
-      {/* <BrowserRouter basename={process.env.PUBLIC_URL}> */}
-      <Routes>
-        {/* <Route path={process.env.PUBLIC_URL}> */}
-        {routes.map(({ path, name, exact, ...route }: any, key: any) => {
-          let filtercrumbs = routes.filter(({ path }) => {
-            // if (macthedRoute?.path?.indexOf(path) !== -1) {
-            return true;
-            // }
-          });
-          let crumbs = filtercrumbs.map(({ path, ...rest }) => {
-            return {
-              path: Object.keys(params).length
-                ? Object.keys(params).reduce(
-                    (path, param) => path.replace(`:${param}`, params[param]),
-                    path
-                  )
-                : path,
-              ...rest,
-            };
-          });
-          return (
-            <Route
-              path={path}
-              element={
-                path === '/login' ? (
-                  <Suspense fallback={loading()}>
-                    <route.component {...props} name={name} />
-                  </Suspense>
-                ) : (
-                  <PrivateRoute>
+      <ErrorBoundary>
+        <Global styles={css``} />
+        {/* <BrowserRouter basename={process.env.PUBLIC_URL}> */}
+        <Routes>
+          {/* <Route path={process.env.PUBLIC_URL}> */}
+          {routes.map(({ path, name, exact, ...route }: any, key: any) => {
+            let filtercrumbs = routes.filter(({ path }) => {
+              // if (macthedRoute?.path?.indexOf(path) !== -1) {
+              return true;
+              // }
+            });
+            let crumbs = filtercrumbs.map(({ path, ...rest }) => {
+              return {
+                path: Object.keys(params).length
+                  ? Object.keys(params).reduce(
+                      (path, param) => path.replace(`:${param}`, params[param]),
+                      path
+                    )
+                  : path,
+                ...rest,
+              };
+            });
+            return (
+              <Route
+                path={path}
+                element={
+                  path === '/login' ? (
                     <Suspense fallback={loading()}>
-                      <Topbar />
                       <route.component {...props} name={name} />
                     </Suspense>
-                  </PrivateRoute>
-                )
-              }
-            />
-          );
-        })}
-        {/* </Route> */}
-        {/* <Route
+                  ) : (
+                    <PrivateRoute>
+                      <Suspense fallback={loading()}>
+                        <Topbar />
+                        <route.component {...props} name={name} />
+                      </Suspense>
+                    </PrivateRoute>
+                  )
+                }
+              />
+            );
+          })}
+          {/* </Route> */}
+          {/* <Route
             path='/*'
             element={<Navigate to={`${process.env.PUBLIC_URL}/dashboard`} />}
           /> */}
-      </Routes>
-      {/* </BrowserRouter> */}
+        </Routes>
+        {/* </BrowserRouter> */}
+      </ErrorBoundary>
     </ThemeProvider>
   );
 };

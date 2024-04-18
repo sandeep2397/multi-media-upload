@@ -5,6 +5,19 @@
 /// <reference types="react" />
 /// <reference types="react-dom" />
 
+interface RecaptchaVerifier {
+  clear(): void;
+  render(): void;
+  verify(): void;
+  // Add other methods and properties as needed
+}
+// Declare the window object with the recaptchaVerifier property
+declare global {
+  interface Window {
+    recaptchaVerifier: RecaptchaVerifier;
+  }
+}
+
 declare namespace NodeJS {
   interface ProcessEnv {
     readonly NODE_ENV: 'development' | 'production' | 'test';

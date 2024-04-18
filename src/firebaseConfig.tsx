@@ -19,5 +19,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const customAuth = getAuth(app);
+// customAuth.languageCode = 'it';
 export const mediaDb = getStorage(app);
 // firebase.initializeApp(firebaseConfig);
