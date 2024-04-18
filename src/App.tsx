@@ -80,6 +80,21 @@ const App: FC<Props> = (props: Props) => {
     return theme;
   };
 
+  useEffect(() => {
+    const handleUnhandledRejection = (event: any) => {
+      // Log the unhandled rejection
+      console.error('Unhandled promise rejection:', event.reason);
+      // Optionally, you can perform additional actions here
+    };
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => {
+      window.removeEventListener(
+        'unhandledrejection',
+        handleUnhandledRejection
+      );
+    };
+  }, []);
+
   let crumbs: any = [];
   return (
     <ThemeProvider theme={gettheme()}>

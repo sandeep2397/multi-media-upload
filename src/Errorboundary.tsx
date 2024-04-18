@@ -1,32 +1,35 @@
-/*
-©2022 Pivotree | All rights reserved
-*/
-import React from 'react';
-// import ErrorDialog from './components/dialog/ErrorDialog';
+import React, { ErrorInfo } from 'react';
 
-interface Props {
-  children: any;
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
 }
 
-interface State {
-  hasError?: boolean;
+interface ErrorBoundaryState {
+  hasError: boolean;
 }
 
-class ErrorBoundary extends React.Component<Props, State> {
-  constructor(props: any) {
+class ErrorBoundary extends React.Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  componentDidCatch(error: any, info: any) {
-    console.log('ERROR LOGS---->', error);
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // Log the error
+    console.error('Error caught by ErrorBoundary:', error, errorInfo);
+    // Update state to trigger a re-render with fallback UI
     this.setState({ hasError: true });
   }
 
   render() {
     if (this.state.hasError) {
-      return <div>UncaughtError.......................</div>;
+      // Render fallback UI
+      return <div>Something went wrong.</div>;
     }
+    // Render children normally
     return this.props.children;
   }
 }

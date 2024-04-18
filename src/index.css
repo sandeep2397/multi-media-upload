@@ -51,3 +51,7 @@ code {
   cursor: pointer;
   color: #f8d204; /* Color of filled stars */
 }
+
+.form-control  {
+  width: 380px/* Color of filled stars */
+}

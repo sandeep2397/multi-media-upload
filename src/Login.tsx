@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 import React, { FC, useEffect, useState } from 'react';
 import { Cookies } from 'react-cookie';
-import { FaEye, FaEyeSlash, FaLock, FaPhone, FaUser } from 'react-icons/fa';
+import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
 import { MdLogin } from 'react-icons/md';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -40,10 +40,14 @@ import {
   signInWithPhoneNumber,
   signInWithPopup,
 } from 'firebase/auth';
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/material.css';
+// import 'react-phone-input-2/lib/style.css';
 import OTPCapture from './OTPCapture';
 import provider from './authProvider';
 import { auth } from './customFirebaseConfig';
 import { customAuth } from './firebaseConfig';
+
 interface Props {
   children?: null;
 }
@@ -69,6 +73,7 @@ const Login: FC<Props> = (props) => {
     useState<ConfirmationResult | null>(null);
   const [captureOTP, setOTPCaptureScreen] = useState(false);
   const [savedOtp, setSavedOtp] = useState('');
+  const [countryCode, setCountryCode] = useState('+91');
   // const [invalidCreds, setInvalidCreds] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
@@ -176,7 +181,8 @@ const Login: FC<Props> = (props) => {
 
   const handleGetOtp = () => {
     const phoneNumberRegex = /^[5-9]\d{9}$/;
-    if (phoneNumberRegex.test(phoneNumber)) {
+    const onlyPhone = phoneNumber?.toString()?.slice(-10);
+    if (phoneNumberRegex.test(onlyPhone)) {
       sendOTPToUser();
     } else {
       setInvalidNumber(true);
@@ -211,50 +217,44 @@ const Login: FC<Props> = (props) => {
     // setLoginLoading(true)
     const appVerifier: any = new RecaptchaVerifier(
       auth,
-      'recaptcha-container'
-      //   {
-      //     size: 'invisible',
-      //   }
+      'recaptcha-container',
+      {}
     );
-    // try {
-    //   const timeoutDuration = 10000; // Timeout duration in milliseconds (e.g., 10 seconds)
+    const onlyPhone = phoneNumber?.toString()?.slice(-10);
+    const lengthOfPhoneWithCode = phoneNumber?.length;
+    const countryCode = phoneNumber
+      ?.toString()
+      ?.slice(0, lengthOfPhoneWithCode - 10);
 
-    //   const isCaptchaVerified = await verifyRecaptcha(
-    //     appVerifier,
-    //     timeoutDuration
+    const phoneNumberWithCountryCode = `+${countryCode} ${onlyPhone}`;
+    signInWithPhoneNumber(auth, phoneNumberWithCountryCode, appVerifier)
+      ?.then((confitmationOTP: any) => {
+        setConfirmationResult(confitmationOTP);
+        setOTPCaptureScreen(true);
+      })
+      .catch((err: any) => {
+        setCustomErrorData({
+          errorOccured: true,
+          errorMsg: err.code || 'Invalid Phone Number',
+        });
+        console.error('otp error=====>', err);
+      });
+    // try {
+    //   const confitmationOTP = await signInWithPhoneNumber(
+    //     auth,
+    //     phoneNumberWithCountryCode,
+    //     appVerifier
     //   );
-    //   if (isCaptchaVerified) {
-    //     // ReCAPTCHA verification succeeded
-    //     console.log('ReCAPTCHA verification succeeded');
-    //   } else {
-    //     // ReCAPTCHA verification failed
-    //     console.log('ReCAPTCHA verification failed');
-    //   }
-    // } catch (err) {
+    //   setConfirmationResult(confitmationOTP);
+    //   setOTPCaptureScreen(true);
+    //   // setOTPCaptureScreen(true);
+    // } catch (err: any) {
     //   setCustomErrorData({
     //     errorOccured: true,
-    //     errorMsg: 'Invalid Captcha',
+    //     errorMsg: err.code || 'Invalid Phone Number',
     //   });
     //   console.error('otp error=====>', err);
     // }
-
-    const phoneNumberWithCountryCode = `+1 ${phoneNumber}`;
-    try {
-      const confitmationOTP = await signInWithPhoneNumber(
-        auth,
-        phoneNumberWithCountryCode,
-        appVerifier
-      );
-      setConfirmationResult(confitmationOTP);
-      setOTPCaptureScreen(true);
-      // setOTPCaptureScreen(true);
-    } catch (err: any) {
-      setCustomErrorData({
-        errorOccured: true,
-        errorMsg: err.code || 'Invalid Phone Number',
-      });
-      console.error('otp error=====>', err);
-    }
   };
 
   //   const handleVerifyOTP = async (otp: any) => {
@@ -570,10 +570,38 @@ const Login: FC<Props> = (props) => {
                 ) : (
                   <>
                     <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
-                      <InputLabel htmlFor='outlined-adornment-phoneNumber'>
+                      {/* <InputLabel htmlFor='outlined-adornment-phoneNumber'>
                         Mobile Number
-                      </InputLabel>
-                      <OutlinedInput
+                      </InputLabel> */}
+                      <PhoneInput
+                        country={'in'}
+                        value={phoneNumber}
+                        inputProps={{
+                          name: 'phoneNumber',
+                          required: true,
+                          autoFocus: true,
+                        }}
+                        enableSearch
+                        inputStyle={{
+                          width: '370px',
+                          fontFamily: 'Arial',
+                          height: '40px',
+                        }}
+                        searchClass=''
+                        //    required={phoneNumber ? false : true}
+                        //    onEnterKeyPress={(event: any) => handlekeypress(event)}
+                        // onKeyDown={(event: any) => {
+                        //   if (event?.key === 'Enter') {
+                        //     handleGetOtp();
+                        //   }
+                        // }}
+                        onChange={(val: any) => {
+                          //   let value = event?.target.value;
+                          setInvalidNumber(false);
+                          setPhoneNumber(val);
+                        }}
+                      />
+                      {/* <OutlinedInput
                         id='outlined-adornment-phoneNumber'
                         type={'number'}
                         name='phoneNumber'
@@ -592,17 +620,23 @@ const Login: FC<Props> = (props) => {
                         }}
                         startAdornment={
                           <InputAdornment position='start'>
-                            <FaPhone
-                              style={{ margin: '0px 4px' }}
-                              color='primary'
+                            
+                            <LoginCountrySelect
+                              defaultValue={{
+                                code: 'IN',
+                                label: 'India',
+                                phone: '+91',
+                              }}
+                              sendLocationBack={(selectedOption: any) => {
+                                setCountryCode(selectedOption);
+                              }}
                             />
-                            +91
                           </InputAdornment>
                         }
                         placeholder='Enter 10 digit Phone Number'
                         label='Mobile Number'
                         autoFocus
-                      />
+                      /> */}
                       {invalidNumber && (
                         <Typography
                           style={{
@@ -631,7 +665,7 @@ const Login: FC<Props> = (props) => {
                     </FormControl>
                     <div
                       id='recaptcha-container'
-                      //   style={{ marginTop: '10px', margin: 'auto' }}
+                      style={{ marginTop: '10px', margin: 'auto' }}
                       // className="justify-center flex"
                     ></div>
                     <Button
