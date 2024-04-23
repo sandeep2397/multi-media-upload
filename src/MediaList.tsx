@@ -651,7 +651,7 @@ const MediaList: FC<Props> = (props: Props) => {
                                       fontWeight={'400'}
                                       color='text.primary'
                                     >
-                                      {`Created By : `}
+                                      {`Uploaded By : `}
                                     </Typography>
                                     <Avatar
                                       alt={createdBy}

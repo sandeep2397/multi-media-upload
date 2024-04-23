@@ -48,6 +48,7 @@ const AppBar = styled(MuiAppBar, {
 export default function Topbar() {
   const navigate = useNavigate();
   const userId = useGetUserId();
+  const userRegex = /^\d+$/;
   const settings = [{ label: 'Logout', icon: MdLogout, id: 'logout' }];
 
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
@@ -113,7 +114,7 @@ export default function Topbar() {
               <Tooltip arrow title={'Profile'}>
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                   <Avatar
-                    alt={userId?.toUpperCase()}
+                    alt={!userRegex.test(userId) && userId?.toUpperCase()}
                     sx={{ bgcolor: deepOrange[500], width: 32, height: 32 }}
                     src='/static/images/avatar/2.jpg'
                   />
