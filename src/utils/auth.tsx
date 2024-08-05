@@ -1,11 +1,11 @@
 /*
 ©2022 Pivotree | All rights reserved
 */
-import { Cookies } from "react-cookie";
+import { Cookies } from 'react-cookie';
 
 export const isUserAuthenticated = (): boolean => {
   let cookies = new Cookies();
-  const session = cookies.get("eventShuffle");
+  const session = cookies.get('multimedia');
   if (session) {
     return true;
   }
@@ -14,7 +14,7 @@ export const isUserAuthenticated = (): boolean => {
 
 export const removeSession = () => {
   let cookies = new Cookies();
-  cookies.remove("eventShuffle", {
-    path: "/",
+  cookies.remove('multimedia', {
+    path: '/',
   });
 };
