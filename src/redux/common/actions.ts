@@ -2,7 +2,7 @@
 ©2022 Pivotree | All rights reserved
 */
 import {
-  CACHE_MEDIA_DATA,
+  CACHE_EVENT_DATA,
   COMMON_ACTION,
   COMMON_ACTION_FAILED,
   COMMON_ACTION_SUCCESS,
@@ -14,7 +14,7 @@ import {
   TOGGLE_SESSION_PROMPT,
   TOGGLE_SNACKBAR,
   TOGGLE_USER_SUCCESS,
-} from '../../constants/actionTypes';
+} from "../../constants/actionTypes";
 type CommonAction = { type: string; payload: {} | string };
 
 export const saveMenuState = (data: string): CommonAction => ({
@@ -59,8 +59,8 @@ export const commonUserLoginSuccess = (data: any): CommonAction => ({
   payload: data,
 });
 
-export const setCachedMediaList = (data: any): CommonAction => ({
-  type: CACHE_MEDIA_DATA,
+export const setCachedEventShuffleList = (data: any): CommonAction => ({
+  type: CACHE_EVENT_DATA,
   payload: data,
 });
 export const captureLoggedInUser = (data: any): CommonAction => ({

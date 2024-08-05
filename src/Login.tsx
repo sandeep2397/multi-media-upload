@@ -14,14 +14,14 @@ import {
   OutlinedInput,
   Typography,
   useTheme,
-} from '@mui/material';
-import React, { FC, useEffect, useState } from 'react';
-import { Cookies } from 'react-cookie';
-import { FaEye, FaEyeSlash, FaLock, FaUser } from 'react-icons/fa';
-import { MdLogin } from 'react-icons/md';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { captureLoggedInUser, toggleSessionPrompt } from './redux/root_actions';
+} from "@mui/material";
+import React, { FC, useEffect, useState } from "react";
+import { Cookies } from "react-cookie";
+import { FaEye, FaEyeSlash, FaLock, FaUser } from "react-icons/fa";
+import { MdLogin } from "react-icons/md";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { captureLoggedInUser, toggleSessionPrompt } from "./redux/root_actions";
 import {
   LoginButton,
   LoginDiv,
@@ -29,7 +29,7 @@ import {
   LoginLayoutWrapper,
   StyledForm,
   WelcomeLabel,
-} from './style';
+} from "./style";
 
 // import { signInWithEmailAndPassword } from 'firebase/auth';
 import {
@@ -39,14 +39,15 @@ import {
   signInWithEmailAndPassword,
   signInWithPhoneNumber,
   signInWithPopup,
-} from 'firebase/auth';
-import PhoneInput from 'react-phone-input-2';
-import 'react-phone-input-2/lib/material.css';
+} from "firebase/auth";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/material.css";
 // import 'react-phone-input-2/lib/style.css';
-import OTPCapture from './OTPCapture';
-import provider from './authProvider';
-import { auth } from './customFirebaseConfig';
-import { customAuth } from './firebaseConfig';
+import OTPCapture from "./OTPCapture";
+import provider from "./authProvider";
+import { auth } from "./customFirebaseConfig";
+import { customAuth } from "./firebaseConfig";
+import { userData } from "./userStubbedData";
 
 interface Props {
   children?: null;
@@ -63,24 +64,24 @@ const Login: FC<Props> = (props) => {
   const [invalidCreds, setInvalidCreds] = useState(false);
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [existingAccount, setExistingAccount] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [invalidNumber, setInvalidNumber] = useState(false);
   const [customErrorData, setCustomErrorData] = useState({
     errorOccured: false,
-    errorMsg: '',
+    errorMsg: "",
   });
   const [confirmationResult, setConfirmationResult] =
     useState<ConfirmationResult | null>(null);
   const [captureOTP, setOTPCaptureScreen] = useState(false);
-  const [savedOtp, setSavedOtp] = useState('');
-  const [countryCode, setCountryCode] = useState('+91');
+  const [savedOtp, setSavedOtp] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
   // const [invalidCreds, setInvalidCreds] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
   const [state, setState] = useState({
-    username: '',
-    password: '',
+    username: "",
+    password: "",
   });
 
   useEffect(() => {
@@ -94,7 +95,7 @@ const Login: FC<Props> = (props) => {
   };
 
   const handlekeypress = (e: KeyboardEvent) => {
-    if (e.getModifierState('CapsLock')) {
+    if (e.getModifierState("CapsLock")) {
       passscapsState(true);
     } else {
       passscapsState(false);
@@ -104,7 +105,7 @@ const Login: FC<Props> = (props) => {
   const handleChange = (event: any): void => {
     let name = event?.target.name;
     let value = event?.target.value;
-    event.target.setCustomValidity('');
+    event.target.setCustomValidity("");
     setInvalidCreds(false);
     setState({
       ...state,
@@ -119,21 +120,26 @@ const Login: FC<Props> = (props) => {
     try {
       // const auth = getAuth();
       // await firebase.auth().signInWithEmailAndPassword(state.username, state.password);
-      const loginResp: any = await signInWithEmailAndPassword(
-        customAuth,
-        state.username,
-        state.password
+
+      const loginResp: any = userData?.find(
+        (user: any) =>
+          user.userName === state.username && user.password === state.password
       );
-      let cookieData = {
-        jwtToken: loginResp?.user?.accessToken,
-      };
-      let tempdata = JSON.stringify(cookieData);
-      cookies.set('multimedia', tempdata, {
-        path: '/',
-      });
-      navigate('/imageupload');
-      setLoginLoading(false);
-      dispatch(captureLoggedInUser(loginResp));
+      if (loginResp) {
+        let cookieData = {
+          jwtToken: loginResp?.accessToken,
+        };
+        let tempdata = JSON.stringify(cookieData);
+        cookies.set("eventShuffle", tempdata, {
+          path: "/",
+        });
+        navigate("/eventshuffle");
+        setLoginLoading(false);
+        dispatch(captureLoggedInUser(loginResp));
+      } else {
+        setLoginLoading(false);
+        setInvalidCreds(true);
+      }
     } catch (error) {
       setLoginLoading(false);
       setInvalidCreds(true);
@@ -155,10 +161,10 @@ const Login: FC<Props> = (props) => {
         jwtToken: token,
       };
       let tempdata = JSON.stringify(cookieData);
-      cookies.set('multimedia', tempdata, {
-        path: '/',
+      cookies.set("eventShuffle", tempdata, {
+        path: "/",
       });
-      navigate('/imageupload');
+      navigate("/eventshuffle");
       setLoginLoading(false);
       dispatch(captureLoggedInUser(signInRes));
     } catch (error: any) {
@@ -168,10 +174,10 @@ const Login: FC<Props> = (props) => {
       const email = error.customData.email;
       // The AuthCredential type that was used.
       const credential = GoogleAuthProvider.credentialFromError(error);
-      console.error('Sign In err===>', credential);
+      console.error("Sign In err===>", credential);
       setLoginLoading(false);
 
-      if (error.code === 'auth/popup-blocked') {
+      if (error.code === "auth/popup-blocked") {
         setPopupBlocked(true);
       } else {
         setInvalidCreds(true);
@@ -217,7 +223,7 @@ const Login: FC<Props> = (props) => {
     // setLoginLoading(true)
     const appVerifier: any = new RecaptchaVerifier(
       auth,
-      'recaptcha-container',
+      "recaptcha-container",
       {}
     );
     const onlyPhone = phoneNumber?.toString()?.slice(-10);
@@ -235,9 +241,9 @@ const Login: FC<Props> = (props) => {
       .catch((err: any) => {
         setCustomErrorData({
           errorOccured: true,
-          errorMsg: err.code || 'Invalid Phone Number',
+          errorMsg: err.code || "Invalid Phone Number",
         });
-        console.error('otp error=====>', err);
+        console.error("otp error=====>", err);
       });
     // try {
     //   const confitmationOTP = await signInWithPhoneNumber(
@@ -273,10 +279,10 @@ const Login: FC<Props> = (props) => {
   //       const cookies = new Cookies();
 
   //       let tempdata = JSON.stringify(cookieData);
-  //       cookies.set('multimedia', tempdata, {
+  //       cookies.set('eventShuffle', tempdata, {
   //         path: '/',
   //       });
-  //       navigate('/imageupload');
+  //       navigate('/eventshuffle');
   //       setLoginLoading(false);
   //       dispatch(captureLoggedInUser(credential));
   //       // OTP verification successful, proceed with authenticated user
@@ -304,10 +310,10 @@ const Login: FC<Props> = (props) => {
       const cookies = new Cookies();
 
       let tempdata = JSON.stringify(cookieData);
-      cookies.set('multimedia', tempdata, {
-        path: '/',
+      cookies.set("eventShuffle", tempdata, {
+        path: "/",
       });
-      navigate('/imageupload');
+      navigate("/eventshuffle");
       setLoginLoading(false);
       dispatch(captureLoggedInUser(credential));
 
@@ -316,79 +322,79 @@ const Login: FC<Props> = (props) => {
       setLoginLoading(false);
       setCustomErrorData({
         errorOccured: true,
-        errorMsg: 'Incorrect OTP',
+        errorMsg: "Incorrect OTP",
       });
-      console.error('otp error=====>', err);
+      console.error("otp error=====>", err);
     }
   };
 
   return (
-    <Box style={{ alignContent: 'center', textAlign: 'center' }}>
+    <Box style={{ alignContent: "center", textAlign: "center" }}>
       {loginLoading && (
         <CircularProgress
-          color='primary'
-          style={{ margin: '160px', zIndex: 5 }}
+          color="primary"
+          style={{ margin: "160px", zIndex: 5 }}
         />
       )}
       <Card
         style={{
           maxWidth: 345,
           opacity: loginLoading ? 0.3 : 1,
-          pointerEvents: loginLoading ? 'none' : 'auto',
+          pointerEvents: loginLoading ? "none" : "auto",
         }}
       >
         <LoginLayoutWrapper
           style={{
-            border: 'solid 1px #c9c9c9',
-            borderRadius: '8px',
-            margin: 'auto',
-            padding: '2px 16px',
-            background: '#f3f3ff',
-            minHeight: '400px',
-            height: 'fit-content',
-            marginTop: '-16px',
+            border: "solid 1px #c9c9c9",
+            borderRadius: "8px",
+            margin: "auto",
+            padding: "2px 16px",
+            background: "#f3f3ff",
+            minHeight: "400px",
+            height: "fit-content",
+            marginTop: "-16px",
           }}
         >
           <Container
             fixed
             style={{
-              textAlign: 'center',
-              marginTop: '4px',
-              marginBottom: '8px',
-              height: '80px',
-              width: '210px',
+              textAlign: "center",
+              marginTop: "4px",
+              marginBottom: "8px",
+              height: "80px",
+              width: "210px",
             }}
           >
             <img
-              src={require('./assets/Logo.png')}
-              height='100%'
-              width={'100%'}
-              alt='Logo'
+              src={require("./assets/Logo.png")}
+              height="100%"
+              width={"100%"}
+              alt="Logo"
               style={{
                 aspectRatio: 3 / 2,
-                objectFit: 'contain',
-                mixBlendMode: 'darken',
+                objectFit: "contain",
+                mixBlendMode: "darken",
               }}
             />
           </Container>
-          <Divider style={{ margin: '8px' }} />
+          <Divider style={{ margin: "8px" }} />
           <Container fixed>
             {invalidCreds && (
-              <Alert style={{ marginTop: '8px' }} severity='error'>
-                {' '}
-                {'Invalid Credentials or'}
+              <Alert style={{ marginTop: "8px" }} severity="error">
+                {" "}
+                {"Invalid Credentials"}
               </Alert>
             )}
 
             {popupBlocked && (
-              <Alert style={{ marginTop: '8px' }} severity='info'>
-                {' '}
-                {'Enable popup blocker from your url'}
+              <Alert style={{ marginTop: "8px" }} severity="info">
+                {" "}
+                {"Enable popup blocker from your url"}
               </Alert>
             )}
 
             {customErrorData?.errorOccured && (
-              <Alert style={{ marginTop: '8px' }} severity='error'>
+              <Alert style={{ marginTop: "8px" }} severity="error">
                 {customErrorData?.errorMsg}
               </Alert>
             )}
@@ -406,43 +412,43 @@ const Login: FC<Props> = (props) => {
                 phoneNumber={phoneNumber}
               />
             ) : (
-              <LoginDiv style={{ marginTop: '8px' }}>
+              <LoginDiv style={{ marginTop: "8px" }}>
                 <div
                   style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    margin: '8px',
-                    marginTop: '0px',
+                    display: "flex",
+                    flexDirection: "column",
+                    margin: "8px",
+                    marginTop: "0px",
                     // borderTop: 'solid 1px #a7a7a7',
                   }}
                 >
-                  <LoginLabel style={{ marginTop: '0px' }}>
-                    {'Login To Multi Media App'}{' '}
-                  </LoginLabel>{' '}
+                  <LoginLabel style={{ marginTop: "0px" }}>
+                    {"Login To Event Shuffle App"}{" "}
+                  </LoginLabel>{" "}
                 </div>
                 {pcapsState && (
                   <Typography
-                    fontSize={'14px'}
+                    fontSize={"14px"}
                     fontWeight={500}
-                    color='#1565c0'
-                    style={{ margin: '0px 10px' }}
+                    color="#1565c0"
+                    style={{ margin: "0px 10px" }}
                   >
-                    {'Caps Lock is on'}
+                    {"Caps Lock is on"}
                   </Typography>
                 )}
 
-                <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
+                {/* <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
                   <LoginButton
                     onClick={() => handleGoogleSignIn()}
-                    variant='contained'
-                    type='submit'
-                    style={{ background: '#fff' }}
+                    variant="contained"
+                    type="submit"
+                    style={{ background: "#fff" }}
                     startIcon={
                       <img
-                        src={require('./assets/google.png')}
-                        height='25px'
-                        width={'25px'}
-                        alt='Logo'
+                        src={require("./assets/google.png")}
+                        height="25px"
+                        width={"25px"}
+                        alt="Logo"
                       />
                     }
                     // disabled={state?.username === '' || state?.password === ''}
@@ -450,28 +456,28 @@ const Login: FC<Props> = (props) => {
                     <WelcomeLabel
                       style={{
                         color: theme?.palette?.primary?.main,
-                        fontWeight: 'bold',
+                        fontWeight: "bold",
                       }}
                       color={theme?.palette?.primary?.main}
                     >
-                      {'Sign In with Google'}
+                      {"Sign In with Google"}
                     </WelcomeLabel>
                   </LoginButton>
-                </FormControl>
-                <Divider>
-                  <Chip label='OR' size='small' />
-                </Divider>
+                </FormControl> */}
+                {/* <Divider>
+                  <Chip label="OR" size="small" />
+                </Divider> */}
 
-                {existingAccount ? (
+                {!existingAccount ? (
                   <StyledForm onSubmit={onFormSubmit}>
-                    <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
-                      <InputLabel htmlFor='outlined-adornment-username'>
+                    <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
+                      <InputLabel htmlFor="outlined-adornment-username">
                         User Name
                       </InputLabel>
                       <OutlinedInput
-                        id='outlined-adornment-username'
-                        type={'text'}
-                        name='username'
+                        id="outlined-adornment-username"
+                        type={"text"}
+                        name="username"
                         value={state.username}
                         required={state.username ? false : true}
                         onKeyPress={(event: any) => handlekeypress(event)}
@@ -480,34 +486,34 @@ const Login: FC<Props> = (props) => {
                             //do nothing
                           } else {
                             event.target.setCustomValidity(
-                              'Username is required'
+                              "Username is required"
                             );
                           }
                         }}
                         onChange={(event: any) => handleChange(event)}
                         startAdornment={
-                          <InputAdornment position='start'>
-                            <FaUser color='primary' />
+                          <InputAdornment position="start">
+                            <FaUser color="primary" />
                           </InputAdornment>
                         }
-                        placeholder='Enter user name'
-                        label='User Name'
+                        placeholder="Enter user name"
+                        label="User Name"
                         // autoFocus
                       />
                     </FormControl>
 
-                    <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
+                    <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
                       <InputLabel
-                        color='primary'
-                        htmlFor='outlined-adornment-password'
+                        color="primary"
+                        htmlFor="outlined-adornment-password"
                       >
-                        {'Password'}
+                        {"Password"}
                       </InputLabel>
                       <OutlinedInput
-                        id='outlined-adornment-password'
-                        type={showPassword ? 'text' : 'password'}
+                        id="outlined-adornment-password"
+                        type={showPassword ? "text" : "password"}
                         value={state.password}
-                        name='password'
+                        name="password"
                         // ref={register({ required: true, maxLength: 80 })}
                         required={state.password ? false : true}
                         onKeyPress={(event: any) => handlekeypress(event)}
@@ -517,77 +523,77 @@ const Login: FC<Props> = (props) => {
                             //do nothing
                           } else {
                             event.target.setCustomValidity(
-                              'Password is required'
+                              "Password is required"
                             );
                           }
                         }}
-                        placeholder='Enter password'
+                        placeholder="Enter password"
                         startAdornment={
-                          <InputAdornment position='start'>
-                            <FaLock color='primary' />
+                          <InputAdornment position="start">
+                            <FaLock color="primary" />
                           </InputAdornment>
                         }
                         endAdornment={
-                          <InputAdornment position='end'>
+                          <InputAdornment position="end">
                             <IconButton
-                              aria-label='toggle password visibility'
+                              aria-label="toggle password visibility"
                               onClick={handleClickShowPassword}
                               onMouseDown={handleMouseDownPassword}
-                              edge='end'
+                              edge="end"
                             >
                               {showPassword ? <FaEye /> : <FaEyeSlash />}
                             </IconButton>
                           </InputAdornment>
                         }
-                        label='Password'
+                        label="Password"
                       />
                     </FormControl>
 
-                    <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
+                    <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
                       <LoginButton
                         onClick={() => {}}
-                        variant='contained'
-                        type='submit'
+                        variant="contained"
+                        type="submit"
                         startIcon={<MdLogin />}
                         // disabled={state?.username === '' || state?.password === ''}
                       >
                         <WelcomeLabel
                           color={theme?.palette?.primary?.contrastText}
                         >
-                          {'Login'}
+                          {"Login"}
                         </WelcomeLabel>
                       </LoginButton>
                     </FormControl>
-                    <Button
-                      color='primary'
+                    {/* <Button
+                      color="primary"
                       onClick={() => {
                         setExistingAccount(false);
                       }}
                     >
                       Sign In with Phone Number
-                    </Button>
+                    </Button> */}
                   </StyledForm>
                 ) : (
                   <>
-                    <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
+                    <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
                       {/* <InputLabel htmlFor='outlined-adornment-phoneNumber'>
                         Mobile Number
                       </InputLabel> */}
                       <PhoneInput
-                        country={'in'}
+                        country={"in"}
                         value={phoneNumber}
                         inputProps={{
-                          name: 'phoneNumber',
+                          name: "phoneNumber",
                           required: true,
                           autoFocus: true,
                         }}
                         enableSearch
                         inputStyle={{
-                          width: '370px',
-                          fontFamily: 'Arial',
-                          height: '40px',
+                          width: "370px",
+                          fontFamily: "Arial",
+                          height: "40px",
                         }}
-                        searchClass=''
+                        searchClass=""
                         //    required={phoneNumber ? false : true}
                         //    onEnterKeyPress={(event: any) => handlekeypress(event)}
                         // onKeyDown={(event: any) => {
@@ -640,36 +646,36 @@ const Login: FC<Props> = (props) => {
                       {invalidNumber && (
                         <Typography
                           style={{
-                            textAlign: 'left',
-                            fontSize: '12px',
-                            color: '#f36161',
+                            textAlign: "left",
+                            fontSize: "12px",
+                            color: "#f36161",
                           }}
-                          color='warning'
+                          color="warning"
                         >{`Please enter valid mobile number(10 digits)`}</Typography>
                       )}
                     </FormControl>
-                    <FormControl fullWidth sx={{ m: 1 }} variant='outlined'>
+                    <FormControl fullWidth sx={{ m: 1 }} variant="outlined">
                       <LoginButton
                         onClick={() => handleGetOtp()}
-                        variant='contained'
-                        type='submit'
+                        variant="contained"
+                        type="submit"
                         startIcon={<MdLogin />}
                         // disabled={state?.username === '' || state?.password === ''}
                       >
                         <WelcomeLabel
                           color={theme?.palette?.primary?.contrastText}
                         >
-                          {'Get otp'}
+                          {"Get otp"}
                         </WelcomeLabel>
                       </LoginButton>
                     </FormControl>
                     <div
-                      id='recaptcha-container'
-                      style={{ marginTop: '10px', margin: 'auto' }}
+                      id="recaptcha-container"
+                      style={{ marginTop: "10px", margin: "auto" }}
                       // className="justify-center flex"
                     ></div>
                     <Button
-                      color='primary'
+                      color="primary"
                       onClick={() => {
                         setExistingAccount(true);
                       }}
@@ -685,11 +691,11 @@ const Login: FC<Props> = (props) => {
       </Card>
       <div
         style={{
-          display: 'flex',
-          flexDirection: 'row',
-          marginLeft: '24px',
-          position: 'fixed',
-          bottom: '20px',
+          display: "flex",
+          flexDirection: "row",
+          marginLeft: "24px",
+          position: "fixed",
+          bottom: "20px",
         }}
       >
         {/* <FooterLabel>

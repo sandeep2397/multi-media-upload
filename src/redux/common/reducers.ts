@@ -2,7 +2,7 @@
 ©2022 Pivotree | All rights reserved
 */
 import {
-  CACHE_MEDIA_DATA,
+  CACHE_EVENT_DATA,
   COMMON_ACTION,
   COMMON_ACTION_FAILED,
   COMMON_ACTION_SUCCESS,
@@ -14,7 +14,7 @@ import {
   TOGGLE_SESSION_PROMPT,
   TOGGLE_SNACKBAR,
   TOGGLE_USER_SUCCESS,
-} from '../../constants/actionTypes';
+} from "../../constants/actionTypes";
 
 interface Snackbar {
   isOpen: boolean;
@@ -33,28 +33,28 @@ type State = {
   snackbar: Snackbar;
   sessionPrompt: boolean;
   loggedInData: any;
-  cachedMediaData: Array<any>;
+  cachedEventsData: Array<any>;
 };
 
 const INIT_STATE = {
-  selectedMenu: 'dashboard',
+  selectedMenu: "dashboard",
   fieldsJson: [],
   fieldsState: {},
   stepperState: {
     activeStep: 0,
-    id: '',
+    id: "",
   },
   loggedInData: {},
   sessionPrompt: false,
   snackbar: {
     isOpen: false,
-    message: '',
-    type: '',
-    severity: 'success',
+    message: "",
+    type: "",
+    severity: "success",
     handleAdd: () => {},
     handleNext: () => {},
   },
-  cachedMediaData: [],
+  cachedEventsData: [],
 };
 
 const Common = (state: State = INIT_STATE, action: CommonAction) => {
@@ -79,8 +79,8 @@ const Common = (state: State = INIT_STATE, action: CommonAction) => {
       return { ...state, sessionPrompt: action.payload };
     case SAVE_LOGGED_IN_DATA:
       return { ...state, loggedInData: action.payload };
-    case CACHE_MEDIA_DATA:
-      return { ...state, cachedMediaData: action.payload };
+    case CACHE_EVENT_DATA:
+      return { ...state, cachedEventsData: action.payload };
     case TOGGLE_USER_SUCCESS:
       return { ...state, loggedInData: action.payload };
     default:

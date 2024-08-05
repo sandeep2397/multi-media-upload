@@ -1,10 +1,10 @@
-# Multimedia Upload App
+# eventShuffle Upload App
 
-This directory is a brief example of a [Multimedia App](https://github.com/facebook/create-react-app) site that can be deployed to Vercel with zero configuration.
+This directory is a brief example of a [eventShuffle App](https://github.com/facebook/create-react-app) site that can be deployed to Vercel with zero configuration.
 
 ## Deploy Your Own
 
-Deploy your own Multimedia upload App project with Vercel.
+Deploy your own eventShuffle upload App project with Vercel.
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/vercel/vercel/tree/main/examples/create-react-app&template=create-react-app)
 

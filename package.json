@@ -97,6 +97,7 @@
     "webpack-xlsx-loader": "^1.0.0",
     "workbox-webpack-plugin": "^6.4.1"
   },
+  "proxy": "http://localhost:3001",
   "scripts": {
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
